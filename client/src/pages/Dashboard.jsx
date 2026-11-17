@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
+import api from "../api/axios";
 
 import {
   UploadCloud,
@@ -15,14 +16,53 @@ import {
   FolderPlus
 } from "lucide-react";
 
-
 function Dashboard() {
 
   const [activeItem, setActiveItem] = useState("Dashboard");
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Store logged-in user information
+  const [user, setUser] = useState(null);
 
+  const [userLoading, setUserLoading] = useState(true);
+
+  // Fetch logged-in user from backend
+  useEffect(() => {
+
+    const fetchUser = async () => {
+
+      try {
+
+        const response = await api.get("/auth/me");
+
+        console.log("Current User:", response.data);
+
+        // Support both possible backend response structures
+        const currentUser = response.data.user || response.data;
+
+        setUser(currentUser);
+
+      } catch (error) {
+
+        console.error(
+          "Failed to fetch user:",
+          error.response?.data || error.message
+        );
+
+      } finally {
+
+        setUserLoading(false);
+
+      }
+
+    };
+
+    fetchUser();
+
+  }, []);
+
+
+  // Sample files (temporary static data)
   const files = [
     {
       name: "Computer Networks Notes",
@@ -67,6 +107,24 @@ function Dashboard() {
   ];
 
 
+  // Get greeting based on current time
+  const getGreeting = () => {
+
+    const hour = new Date().getHours();
+
+    if (hour < 12) {
+      return "Good morning";
+    }
+
+    if (hour < 17) {
+      return "Good afternoon";
+    }
+
+    return "Good evening";
+
+  };
+
+
   return (
 
     <div className="app-layout">
@@ -94,14 +152,25 @@ function Dashboard() {
           <section className="welcome-section">
 
             <div>
-              <p className="welcome-date">YOUR WORKSPACE</p>
 
-              <h1>Good morning, Suraj 👋</h1>
+              <p className="welcome-date">
+                YOUR WORKSPACE
+              </p>
+
+              <h1>
+                {getGreeting()}, {
+                  userLoading
+                    ? "..."
+                    : user?.name?.trim().split(/\s+/)[0] || "there"
+                } 👋
+              </h1>
 
               <p className="welcome-description">
                 Here's what's happening with your files today.
               </p>
+
             </div>
+
 
             <div className="welcome-actions">
 
@@ -127,11 +196,13 @@ function Dashboard() {
             <div className="stat-card">
 
               <div className="stat-top">
+
                 <span>Total Files</span>
 
                 <div className="stat-icon purple">
                   <FileText size={20} />
                 </div>
+
               </div>
 
               <h2>128</h2>
@@ -144,11 +215,13 @@ function Dashboard() {
             <div className="stat-card">
 
               <div className="stat-top">
+
                 <span>Storage Used</span>
 
                 <div className="stat-icon blue">
                   <UploadCloud size={20} />
                 </div>
+
               </div>
 
               <h2>2.4 GB</h2>
@@ -161,11 +234,13 @@ function Dashboard() {
             <div className="stat-card">
 
               <div className="stat-top">
+
                 <span>Shared Files</span>
 
                 <div className="stat-icon green">
                   <ArrowUpRight size={20} />
                 </div>
+
               </div>
 
               <h2>24</h2>
@@ -173,7 +248,6 @@ function Dashboard() {
               <p>Files shared with others</p>
 
             </div>
-
 
           </section>
 
@@ -189,12 +263,14 @@ function Dashboard() {
               </div>
 
               <div>
+
                 <h3>Upload your files</h3>
 
                 <p>
                   Keep your documents, images and other files
                   organized in one place.
                 </p>
+
               </div>
 
             </div>
@@ -213,8 +289,13 @@ function Dashboard() {
             <div className="section-heading">
 
               <div>
+
                 <h2>Recent Files</h2>
-                <p>Your recently uploaded documents</p>
+
+                <p>
+                  Your recently uploaded documents
+                </p>
+
               </div>
 
               <button className="view-all-btn">
@@ -255,8 +336,11 @@ function Dashboard() {
                       </div>
 
                       <div>
+
                         <h4>{file.name}</h4>
+
                         <p>{file.type}</p>
+
                       </div>
 
                     </div>
@@ -288,6 +372,9 @@ function Dashboard() {
             </div>
 
           </section>
+
+
+          {/* Footer */}
 
           <footer className="dashboard-footer">
             CloudSpace © 2026 · Secure file storage and sharing

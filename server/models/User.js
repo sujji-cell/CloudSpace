@@ -1,9 +1,29 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
-
     {
-        // User's Full Name
+        // First Name - Required
+        firstName: {
+            type: String,
+            required: [true, "First name is required"],
+            trim: true
+        },
+
+        // Middle Name - Optional
+        middleName: {
+            type: String,
+            trim: true,
+            default: ""
+        },
+
+        // Last Name - Optional
+        lastName: {
+            type: String,
+            trim: true,
+            default: ""
+        },
+
+        // Full Name
         name: {
             type: String,
             required: true,
@@ -27,6 +47,34 @@ const userSchema = new mongoose.Schema(
             select: false
         },
 
+        // Email Verification Status
+        isVerified: {
+            type: Boolean,
+            default: false
+        },
+
+        // Hashed Email OTP (not the original OTP)
+        emailOtpHash: {
+            type: String,
+            select: false
+        },
+
+        // OTP Expiration Time
+        emailOtpExpiresAt: {
+            type: Date
+        },
+
+        // Number of Incorrect OTP Attempts
+        emailOtpAttempts: {
+            type: Number,
+            default: 0
+        },
+
+        // Last OTP Sent Time (for resend cooldown)
+        emailOtpLastSentAt: {
+            type: Date
+        },
+
         // Total Storage Used (Bytes)
         storageUsed: {
             type: Number,
@@ -38,13 +86,10 @@ const userSchema = new mongoose.Schema(
             type: Number,
             default: 10 * 1024 * 1024 * 1024
         }
-
     },
-
     {
         timestamps: true
     }
-
 );
 
 const User = mongoose.model("User", userSchema);
