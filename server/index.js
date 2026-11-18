@@ -5,7 +5,8 @@ import cookieParser from "cookie-parser";
 
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
-
+import fileRoutes from "./routes/fileRoutes.js";
+import shareRoutes from "./routes/shareRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -29,6 +30,10 @@ app.get("/", (req, res) => {
 // Authentication Routes
 
 app.use("/api/auth", authRoutes);
+app.use("/api/files", fileRoutes);
+
+// Share File
+app.use("/api/shares", shareRoutes);
 
 // Start Server
 

@@ -11,9 +11,11 @@ import Dashboard from "./pages/Dashboard";
 import Register from "./pages/Register";
 import VerifyEmail from "./pages/VerifyEmail";
 import Login from "./pages/Login";
+import MyFiles from "./pages/MyFiles";
 
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
+
 
 function App() {
 
@@ -42,6 +44,7 @@ function App() {
                         element={<Login />}
                     />
 
+
                     {/* Protected Routes */}
 
                     <Route element={<ProtectedRoute />}>
@@ -51,7 +54,13 @@ function App() {
                             element={<Dashboard />}
                         />
 
+                        <Route
+                            path="/my-files"
+                            element={<MyFiles />}
+                        />
+
                     </Route>
+
 
                     {/* Unknown Routes */}
 
