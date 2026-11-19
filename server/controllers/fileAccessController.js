@@ -4,7 +4,6 @@ import cloudinary from "../config/cloudinary.js";
 import File from "../models/File.js";
 import Share from "../models/Share.js";
 
-
 export const getFileAccessUrl = async (req, res) => {
 
     try {
@@ -100,13 +99,20 @@ export const getFileAccessUrl = async (req, res) => {
 
         }
 
+        // Update last accessed date
+        file.lastAccessedAt = new Date();
+
+        await file.save();
+
         return res.status(200).json({
 
             success: true,
 
             message: "File access granted.",
 
-            accessUrl
+            accessUrl,
+
+            lastAccessedAt: file.lastAccessedAt
 
         });
 

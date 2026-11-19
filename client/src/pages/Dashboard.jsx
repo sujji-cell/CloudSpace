@@ -31,6 +31,10 @@ function Dashboard() {
     const [filesLoading, setFilesLoading] = useState(true);
     const [filesError, setFilesError] = useState("");
 
+    // Shared files count
+    const [sharedCount, setSharedCount] = useState(0);
+    const [sharedLoading, setSharedLoading] = useState(true);
+
     // File upload states
     const fileInputRef = useRef(null);
     const [uploading, setUploading] = useState(false);
@@ -102,6 +106,40 @@ function Dashboard() {
 
 
     // --------------------------------
+    // FETCH SHARED FILES COUNT
+    // --------------------------------
+
+    const fetchSharedFiles = async () => {
+
+        try {
+
+            setSharedLoading(true);
+
+            const response = await api.get("/shares/by-me");
+
+            const shares = response.data.shares || [];
+
+            setSharedCount(shares.length);
+
+        } catch (error) {
+
+            console.error(
+                "Failed to fetch shared files:",
+                error.response?.data || error.message
+            );
+
+            setSharedCount(0);
+
+        } finally {
+
+            setSharedLoading(false);
+
+        }
+
+    };
+
+
+    // --------------------------------
     // INITIAL DATA + AUTO REFRESH
     // --------------------------------
 
@@ -110,6 +148,7 @@ function Dashboard() {
         // Fetch initial data
         fetchUser();
         fetchFiles();
+        fetchSharedFiles();
 
 
         // Refresh data whenever files change
@@ -117,6 +156,7 @@ function Dashboard() {
 
             fetchUser();
             fetchFiles();
+            fetchSharedFiles();
 
         };
 
@@ -500,7 +540,9 @@ function Dashboard() {
 
                             </div>
 
-                            <h2>0</h2>
+                            <h2>
+                                {sharedLoading ? "..." : sharedCount}
+                            </h2>
 
                             <p>Files shared with others</p>
 

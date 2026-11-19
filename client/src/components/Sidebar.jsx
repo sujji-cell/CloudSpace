@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 
-import { useNavigate } from "react-router-dom";
+import {
+    useNavigate,
+    useLocation
+} from "react-router-dom";
 
 import {
     LayoutDashboard,
@@ -18,28 +21,27 @@ import {
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 
-
 function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     const { user, setUser } = useAuth();
 
     const [storageUsed, setStorageUsed] = useState(0);
 
-
     const menuItems = [
-        { title: "Dashboard", icon: LayoutDashboard },
-        { title: "My Files", icon: FolderOpen },
-        { title: "Shared Files", icon: Share2 },
-        { title: "Recent", icon: Clock3 },
-        { title: "Favourites", icon: Star }
+        { title: "Dashboard", icon: LayoutDashboard, path: "/" },
+        { title: "My Files", icon: FolderOpen, path: "/my-files" },
+        { title: "Shared Files", icon: Share2, path: "/shared-files" },
+        { title: "Recent", icon: Clock3, path: "/recent-files" },
+        { title: "Favourites", icon: Star, path: null }
     ];
 
-
-    // --------------------------------
-    // FETCH STORAGE
-    // --------------------------------
+    const currentActiveItem =
+        menuItems.find(item => item.path === location.pathname)?.title ||
+        activeItem ||
+        "";
 
     useEffect(() => {
 
@@ -66,19 +68,13 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
         };
 
-
-        // Initial storage fetch
         fetchStorage();
 
-
-        // Listen for file upload/delete events
         window.addEventListener(
             "cloudspace-files-updated",
             fetchStorage
         );
 
-
-        // Cleanup event listener
         return () => {
 
             window.removeEventListener(
@@ -89,11 +85,6 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
         };
 
     }, []);
-
-
-    // --------------------------------
-    // FORMAT STORAGE
-    // --------------------------------
 
     const formatSize = (bytes) => {
 
@@ -111,22 +102,11 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
     };
 
-
-    // --------------------------------
-    // USER INFORMATION
-    // --------------------------------
-
-    const firstName =
-        user?.firstName ||
-        user?.name?.trim().split(/\s+/)[0] ||
-        "User";
-
     const fullName = [
         user?.firstName,
         user?.middleName,
         user?.lastName
     ].filter(Boolean).join(" ") || user?.name || "User";
-
 
     const initials = fullName
         .split(/\s+/)
@@ -134,11 +114,6 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
         .slice(0, 2)
         .map(name => name[0].toUpperCase())
         .join("");
-
-
-    // --------------------------------
-    // STORAGE LIMIT
-    // --------------------------------
 
     const storageLimit =
         user?.storageLimit || 10 * 1024 * 1024 * 1024;
@@ -148,32 +123,17 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
         100
     );
 
+    const handleNavigation = (item) => {
 
-    // --------------------------------
-    // NAVIGATION
-    // --------------------------------
+        if (!item.path) return;
 
-    const handleNavigation = (title) => {
+        setActiveItem?.(item.title);
 
-        setActiveItem(title);
+        navigate(item.path);
 
-        const routes = {
-            "Dashboard": "/",
-            "My Files": "/my-files"
-        };
-
-        if (routes[title]) {
-            navigate(routes[title]);
-        }
-
-        onClose();
+        onClose?.();
 
     };
-
-
-    // --------------------------------
-    // LOGOUT
-    // --------------------------------
 
     const handleLogout = async () => {
 
@@ -185,6 +145,8 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
             navigate("/login", { replace: true });
 
+            onClose?.();
+
         } catch (error) {
 
             console.error("Logout failed:", error);
@@ -192,11 +154,6 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
         }
 
     };
-
-
-    // --------------------------------
-    // SIDEBAR UI
-    // --------------------------------
 
     return (
 
@@ -208,7 +165,6 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
                     onClick={onClose}
                 />
             )}
-
 
             <aside className={`sidebar ${isOpen ? "sidebar-open" : ""}`}>
 
@@ -224,7 +180,6 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                     </div>
 
-
                     <button
                         className="mobile-close"
                         onClick={onClose}
@@ -235,13 +190,9 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                 </div>
 
-
                 <div className="sidebar-content">
 
                     <p className="sidebar-label">WORKSPACE</p>
-
-
-                    {/* NAVIGATION */}
 
                     <nav className="sidebar-menu">
 
@@ -254,9 +205,12 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
                                 <button
                                     key={item.title}
                                     className={`sidebar-link ${
-                                        activeItem === item.title ? "active" : ""
+                                        currentActiveItem === item.title
+                                            ? "active"
+                                            : ""
                                     }`}
-                                    onClick={() => handleNavigation(item.title)}
+                                    onClick={() => handleNavigation(item)}
+                                    disabled={!item.path}
                                 >
 
                                     <Icon size={19} strokeWidth={1.8} />
@@ -271,13 +225,7 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                     </nav>
 
-
-                    {/* SIDEBAR BOTTOM */}
-
                     <div className="sidebar-bottom">
-
-
-                        {/* STORAGE CARD */}
 
                         <div className="storage-card">
 
@@ -288,7 +236,6 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
                                 <span>Storage</span>
 
                             </div>
-
 
                             <div className="storage-progress">
 
@@ -301,12 +248,10 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                             </div>
 
-
                             <p>
                                 {formatSize(storageUsed)} of{" "}
                                 {formatSize(storageLimit)} used
                             </p>
-
 
                             <button className="upgrade-btn">
                                 Manage storage
@@ -314,16 +259,15 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                         </div>
 
-
-                        {/* SETTINGS */}
-
                         <button
                             className={`sidebar-link settings-link ${
-                                activeItem === "Settings" ? "active" : ""
+                                currentActiveItem === "Settings"
+                                    ? "active"
+                                    : ""
                             }`}
                             onClick={() => {
-                                setActiveItem("Settings");
-                                onClose();
+                                setActiveItem?.("Settings");
+                                onClose?.();
                             }}
                         >
 
@@ -332,9 +276,6 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
                             <span>Settings</span>
 
                         </button>
-
-
-                        {/* SIGN OUT */}
 
                         <button
                             className="sidebar-link"
@@ -350,9 +291,6 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
                     </div>
 
                 </div>
-
-
-                {/* USER PROFILE */}
 
                 <div className="sidebar-footer">
 

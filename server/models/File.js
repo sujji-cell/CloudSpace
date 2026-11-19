@@ -21,10 +21,17 @@ const fileSchema = new mongoose.Schema(
             required: true
         },
 
-        // Cloudinary resource type (image, video, raw)
+        // Cloudinary resource type
         resourceType: {
             type: String,
             default: "image"
+        },
+
+        // Delivery type
+        deliveryType: {
+            type: String,
+            enum: ["upload", "private", "authenticated"],
+            default: "upload"
         },
 
         // File size in bytes
@@ -33,13 +40,13 @@ const fileSchema = new mongoose.Schema(
             required: true
         },
 
-        // MIME type (image/png, application/pdf, etc.)
+        // MIME type
         mimeType: {
             type: String,
             required: true
         },
 
-        // File format (pdf, png, jpg, etc.)
+        // File format
         format: {
             type: String,
             default: ""
@@ -50,6 +57,12 @@ const fileSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true
+        },
+
+        // Last time the file was accessed
+        lastAccessedAt: {
+            type: Date,
+            default: null
         }
     },
     {

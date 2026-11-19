@@ -18,11 +18,12 @@ import {
     RefreshCw,
     Trash2,
     X,
-    AlertTriangle
+    AlertTriangle,
+    Share2,
+    Copy
 } from "lucide-react";
 
 import "./MyFiles.css";
-
 
 function MyFiles() {
 
@@ -43,8 +44,18 @@ function MyFiles() {
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState("");
 
-    // File access loading state
+    // File access state
     const [accessingFileId, setAccessingFileId] = useState(null);
+
+    // Share states
+    const [shareFile, setShareFile] = useState(null);
+    const [recipientEmail, setRecipientEmail] = useState("");
+    const [sharing, setSharing] = useState(false);
+    const [shareError, setShareError] = useState("");
+    const [shareSuccess, setShareSuccess] = useState("");
+
+    // Copy link state
+    const [linkCopied, setLinkCopied] = useState(false);
 
 
     // --------------------------------
@@ -81,9 +92,7 @@ function MyFiles() {
 
 
     useEffect(() => {
-
         fetchFiles();
-
     }, []);
 
 
@@ -95,9 +104,7 @@ function MyFiles() {
 
         if (!bytes) return "0 B";
 
-        if (bytes < 1024) {
-            return `${bytes} B`;
-        }
+        if (bytes < 1024) return `${bytes} B`;
 
         if (bytes < 1024 * 1024) {
             return `${(bytes / 1024).toFixed(1)} KB`;
@@ -134,13 +141,11 @@ function MyFiles() {
     const getFileDetails = (mimeType = "") => {
 
         if (mimeType.startsWith("image/")) {
-
             return {
                 icon: Image,
                 className: "image",
                 category: "Images"
             };
-
         }
 
         if (
@@ -148,49 +153,41 @@ function MyFiles() {
             mimeType.includes("excel") ||
             mimeType === "text/csv"
         ) {
-
             return {
                 icon: FileSpreadsheet,
                 className: "excel",
                 category: "Spreadsheets"
             };
-
         }
 
         if (
             mimeType.includes("zip") ||
             mimeType.includes("compressed")
         ) {
-
             return {
                 icon: FileArchive,
                 className: "zip",
                 category: "Archives"
             };
-
         }
 
         if (mimeType === "application/pdf") {
-
             return {
                 icon: FileText,
                 className: "pdf",
                 category: "PDF"
             };
-
         }
 
         if (
             mimeType.includes("word") ||
             mimeType.includes("document")
         ) {
-
             return {
                 icon: FileText,
                 className: "doc",
                 category: "Documents"
             };
-
         }
 
         return {
@@ -240,9 +237,7 @@ function MyFiles() {
 
     const getAuthorizedFileUrl = async (fileId) => {
 
-        const response = await api.get(
-            `/files/${fileId}/access`
-        );
+        const response = await api.get(`/files/${fileId}/access`);
 
         if (!response.data.success || !response.data.accessUrl) {
             throw new Error("Unable to access this file.");
@@ -259,14 +254,11 @@ function MyFiles() {
 
     const handlePreview = async (file) => {
 
-        // Open a blank tab immediately to avoid popup blocking
         const newWindow = window.open("about:blank", "_blank");
 
         if (!newWindow) {
-
             alert("Please allow pop-ups to preview files.");
             return;
-
         }
 
         try {
@@ -308,10 +300,8 @@ function MyFiles() {
 
             setAccessingFileId(file._id);
 
-            // Request permission from backend
             const accessUrl = await getAuthorizedFileUrl(file._id);
 
-            // Download authorized file
             const response = await fetch(accessUrl);
 
             if (!response.ok) {
@@ -357,6 +347,121 @@ function MyFiles() {
 
 
     // --------------------------------
+    // OPEN SHARE MODAL
+    // --------------------------------
+
+    const openShareModal = (file) => {
+
+        setShareFile(file);
+        setRecipientEmail("");
+        setShareError("");
+        setShareSuccess("");
+        setLinkCopied(false);
+
+    };
+
+
+    // --------------------------------
+    // CLOSE SHARE MODAL
+    // --------------------------------
+
+    const closeShareModal = () => {
+
+        if (sharing) return;
+
+        setShareFile(null);
+        setRecipientEmail("");
+        setShareError("");
+        setShareSuccess("");
+        setLinkCopied(false);
+
+    };
+
+
+    // --------------------------------
+    // SHARE FILE THROUGH EMAIL
+    // --------------------------------
+
+    const handleShare = async (e) => {
+
+        e.preventDefault();
+
+        if (!recipientEmail.trim()) {
+            setShareError("Please enter the recipient's email address.");
+            return;
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail.trim())) {
+            setShareError("Please enter a valid email address.");
+            return;
+        }
+
+        try {
+
+            setSharing(true);
+            setShareError("");
+            setShareSuccess("");
+
+            const response = await api.post("/shares", {
+                fileId: shareFile._id,
+                email: recipientEmail.trim().toLowerCase()
+            });
+
+            setShareSuccess(
+                response.data.message || "File shared successfully!"
+            );
+
+        } catch (error) {
+
+            console.error("Share error:", error);
+
+            setShareError(
+                error.response?.data?.message ||
+                "Unable to share this file. Please try again."
+            );
+
+        } finally {
+
+            setSharing(false);
+
+        }
+
+    };
+
+
+    // --------------------------------
+    // COPY RESTRICTED FILE LINK
+    // --------------------------------
+
+    const handleCopyLink = async () => {
+
+        if (!shareFile) return;
+
+        const shareLink =
+            `${window.location.origin}/shared-file/${shareFile._id}`;
+
+        try {
+
+            await navigator.clipboard.writeText(shareLink);
+
+            setLinkCopied(true);
+
+            setTimeout(() => {
+                setLinkCopied(false);
+            }, 2500);
+
+        } catch (error) {
+
+            console.error("Copy Link Error:", error);
+
+            alert("Unable to copy link. Please try again.");
+
+        }
+
+    };
+
+
+    // --------------------------------
     // DELETE FILE
     // --------------------------------
 
@@ -372,12 +477,9 @@ function MyFiles() {
             await api.delete(`/files/${deleteFileId}`);
 
             setFiles((prevFiles) =>
-                prevFiles.filter(
-                    (file) => file._id !== deleteFileId
-                )
+                prevFiles.filter((file) => file._id !== deleteFileId)
             );
 
-            // Refresh storage in Dashboard and Sidebar
             window.dispatchEvent(
                 new Event("cloudspace-files-updated")
             );
@@ -417,7 +519,6 @@ function MyFiles() {
                 onClose={() => setSidebarOpen(false)}
             />
 
-
             <main className="main-content">
 
                 <Navbar
@@ -425,9 +526,7 @@ function MyFiles() {
                     onMenuClick={() => setSidebarOpen(true)}
                 />
 
-
                 <div className="myfiles-content">
-
 
                     {/* PAGE HEADER */}
 
@@ -447,17 +546,13 @@ function MyFiles() {
 
                         </div>
 
-
                         <button
                             className="myfiles-refresh"
                             onClick={fetchFiles}
                             disabled={loading}
                         >
-
                             <RefreshCw size={17} />
-
                             Refresh
-
                         </button>
 
                     </section>
@@ -472,22 +567,17 @@ function MyFiles() {
                             <FileText size={22} />
 
                             <div>
-
                                 <h3>{files.length}</h3>
-
                                 <p>Total Files</p>
-
                             </div>
 
                         </div>
-
 
                         <div className="myfiles-stat-card">
 
                             <UploadCloud size={22} />
 
                             <div>
-
                                 <h3>
                                     {formatFileSize(
                                         files.reduce(
@@ -499,7 +589,6 @@ function MyFiles() {
                                 </h3>
 
                                 <p>Total Storage Used</p>
-
                             </div>
 
                         </div>
@@ -510,7 +599,6 @@ function MyFiles() {
                     {/* SEARCH AND FILTER */}
 
                     <section className="myfiles-toolbar">
-
 
                         <div className="myfiles-search">
 
@@ -527,7 +615,6 @@ function MyFiles() {
 
                         </div>
 
-
                         <div className="myfiles-filter">
 
                             <Filter size={17} />
@@ -538,7 +625,6 @@ function MyFiles() {
                                     setSelectedType(e.target.value)
                                 }
                             >
-
                                 <option value="All Files">All Files</option>
                                 <option value="PDF">PDF</option>
                                 <option value="Images">Images</option>
@@ -546,11 +632,9 @@ function MyFiles() {
                                 <option value="Spreadsheets">Spreadsheets</option>
                                 <option value="Archives">Archives</option>
                                 <option value="Other">Other</option>
-
                             </select>
 
                         </div>
-
 
                         <select
                             className="myfiles-sort"
@@ -559,11 +643,8 @@ function MyFiles() {
                                 setSortOrder(e.target.value)
                             }
                         >
-
                             <option value="newest">Newest First</option>
-
                             <option value="oldest">Oldest First</option>
-
                         </select>
 
                     </section>
@@ -573,35 +654,27 @@ function MyFiles() {
 
                     <section className="myfiles-table-section">
 
-
                         <div className="myfiles-table-heading">
 
                             <div>
-
                                 <h2>All Files</h2>
 
                                 <p>
                                     {filteredFiles.length} files found
                                 </p>
-
                             </div>
 
                         </div>
 
-
                         <div className="myfiles-table">
-
 
                             {/* TABLE HEADER */}
 
                             <div className="myfiles-table-header">
 
                                 <span>FILE NAME</span>
-
                                 <span>FILE SIZE</span>
-
                                 <span>DATE UPLOADED</span>
-
                                 <span>ACTIONS</span>
 
                             </div>
@@ -610,20 +683,15 @@ function MyFiles() {
                             {/* LOADING */}
 
                             {loading && (
-
                                 <div className="myfiles-message">
-
                                     Loading your files...
-
                                 </div>
-
                             )}
 
 
                             {/* ERROR */}
 
                             {!loading && error && (
-
                                 <div className="myfiles-message error">
 
                                     {error}
@@ -633,155 +701,261 @@ function MyFiles() {
                                     </button>
 
                                 </div>
-
                             )}
 
 
                             {/* EMPTY */}
 
-                            {!loading &&
-                                !error &&
-                                filteredFiles.length === 0 && (
+                            {!loading && !error && filteredFiles.length === 0 && (
 
-                                    <div className="myfiles-empty">
+                                <div className="myfiles-empty">
 
-                                        <div className="myfiles-empty-icon">
-
-                                            <UploadCloud size={32} />
-
-                                        </div>
-
-                                        <h3>No files found</h3>
-
-                                        <p>
-                                            Try changing your search or filter.
-                                        </p>
-
+                                    <div className="myfiles-empty-icon">
+                                        <UploadCloud size={32} />
                                     </div>
 
-                                )}
+                                    <h3>No files found</h3>
+
+                                    <p>
+                                        Try changing your search or filter.
+                                    </p>
+
+                                </div>
+
+                            )}
 
 
                             {/* FILE ROWS */}
 
-                            {!loading &&
-                                !error &&
-                                filteredFiles.map((file) => {
+                            {!loading && !error && filteredFiles.map((file) => {
 
-                                    const {
-                                        icon: Icon,
-                                        className
-                                    } = getFileDetails(file.mimeType);
+                                const {
+                                    icon: Icon,
+                                    className
+                                } = getFileDetails(file.mimeType);
 
-                                    const isAccessing =
-                                        accessingFileId === file._id;
+                                const isAccessing =
+                                    accessingFileId === file._id;
 
+                                return (
 
-                                    return (
+                                    <div
+                                        className="myfiles-row"
+                                        key={file._id}
+                                    >
 
-                                        <div
-                                            className="myfiles-row"
-                                            key={file._id}
-                                        >
+                                        {/* FILE NAME */}
 
+                                        <div className="myfiles-name">
 
-                                            {/* FILE NAME */}
-
-                                            <div className="myfiles-name">
-
-                                                <div className={`file-icon ${className}`}>
-
-                                                    <Icon size={21} />
-
-                                                </div>
-
-                                                <div>
-
-                                                    <h4>{file.originalName}</h4>
-
-                                                    <p>
-                                                        {file.format?.toUpperCase() || "FILE"}
-                                                    </p>
-
-                                                </div>
-
+                                            <div className={`file-icon ${className}`}>
+                                                <Icon size={21} />
                                             </div>
 
+                                            <div>
+                                                <h4>{file.originalName}</h4>
 
-                                            {/* FILE SIZE */}
-
-                                            <span>
-                                                {formatFileSize(file.size)}
-                                            </span>
-
-
-                                            {/* DATE */}
-
-                                            <span>
-                                                {formatDate(file.createdAt)}
-                                            </span>
-
-
-                                            {/* ACTIONS */}
-
-                                            <div className="myfiles-actions">
-
-                                                {/* Preview */}
-
-                                                <button
-                                                    title="Preview"
-                                                    disabled={isAccessing}
-                                                    onClick={() =>
-                                                        handlePreview(file)
-                                                    }
-                                                >
-
-                                                    <Eye size={18} />
-
-                                                </button>
-
-
-                                                {/* Download */}
-
-                                                <button
-                                                    title="Download"
-                                                    disabled={isAccessing}
-                                                    onClick={() =>
-                                                        handleDownload(file)
-                                                    }
-                                                >
-
-                                                    <Download size={18} />
-
-                                                </button>
-
-
-                                                {/* Delete */}
-
-                                                <button
-                                                    title="Delete"
-                                                    className="delete-file-btn"
-                                                    onClick={() => {
-                                                        setDeleteFileId(file._id);
-                                                        setDeleteError("");
-                                                    }}
-                                                >
-
-                                                    <Trash2 size={18} />
-
-                                                </button>
-
+                                                <p>
+                                                    {file.format?.toUpperCase() || "FILE"}
+                                                </p>
                                             </div>
 
                                         </div>
 
-                                    );
 
-                                })}
+                                        {/* FILE SIZE */}
+
+                                        <span>
+                                            {formatFileSize(file.size)}
+                                        </span>
+
+
+                                        {/* DATE */}
+
+                                        <span>
+                                            {formatDate(file.createdAt)}
+                                        </span>
+
+
+                                        {/* ACTIONS */}
+
+                                        <div className="myfiles-actions">
+
+                                            <button
+                                                title="Preview"
+                                                disabled={isAccessing}
+                                                onClick={() => handlePreview(file)}
+                                            >
+                                                <Eye size={18} />
+                                            </button>
+
+                                            <button
+                                                title="Download"
+                                                disabled={isAccessing}
+                                                onClick={() => handleDownload(file)}
+                                            >
+                                                <Download size={18} />
+                                            </button>
+
+                                            <button
+                                                title="Share"
+                                                className="share-file-btn"
+                                                onClick={() => openShareModal(file)}
+                                            >
+                                                <Share2 size={18} />
+                                            </button>
+
+                                            <button
+                                                title="Delete"
+                                                className="delete-file-btn"
+                                                onClick={() => {
+                                                    setDeleteFileId(file._id);
+                                                    setDeleteError("");
+                                                }}
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                );
+
+                            })}
 
                         </div>
 
                     </section>
+
+
+                    {/* SHARE MODAL */}
+
+                    {shareFile && (
+
+                        <div
+                            className="share-modal-overlay"
+                            onClick={closeShareModal}
+                        >
+
+                            <div
+                                className="share-modal"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+
+                                <button
+                                    className="share-modal-close"
+                                    onClick={closeShareModal}
+                                    disabled={sharing}
+                                >
+                                    <X size={20} />
+                                </button>
+
+                                <div className="share-modal-icon">
+                                    <Share2 size={25} />
+                                </div>
+
+                                <h2>Share File</h2>
+
+                                <p className="share-modal-description">
+                                    Share this file with another CloudSpace user.
+                                </p>
+
+                                <div className="share-file-info">
+                                    <FileText size={19} />
+
+                                    <span>{shareFile.originalName}</span>
+                                </div>
+
+
+                                {/* COPY LINK SECTION */}
+
+                                <div className="share-link-section">
+
+                                    <p>Or copy a restricted link</p>
+
+                                    <button
+                                        type="button"
+                                        className="copy-share-link-btn"
+                                        onClick={handleCopyLink}
+                                    >
+                                        <Copy size={18} />
+
+                                        {linkCopied
+                                            ? "Link Copied!"
+                                            : "Copy Link"}
+                                    </button>
+
+                                    <small>
+                                        Only CloudSpace users who have already
+                                        been granted access by email can open this link.
+                                    </small>
+
+                                </div>
+
+
+                                {/* EMAIL SHARING FORM */}
+
+                                <form onSubmit={handleShare}>
+
+                                    <label htmlFor="recipientEmail">
+                                        Recipient's Email Address
+                                    </label>
+
+                                    <input
+                                        id="recipientEmail"
+                                        type="email"
+                                        placeholder="Enter registered email address"
+                                        value={recipientEmail}
+                                        onChange={(e) => {
+                                            setRecipientEmail(e.target.value);
+                                            setShareError("");
+                                            setShareSuccess("");
+                                        }}
+                                        required
+                                        disabled={sharing || !!shareSuccess}
+                                    />
+
+                                    {shareError && (
+                                        <p className="share-error-message">
+                                            {shareError}
+                                        </p>
+                                    )}
+
+                                    {shareSuccess && (
+                                        <p className="share-success-message">
+                                            {shareSuccess}
+                                        </p>
+                                    )}
+
+                                    <div className="share-modal-actions">
+
+                                        <button
+                                            type="button"
+                                            className="share-cancel-btn"
+                                            onClick={closeShareModal}
+                                            disabled={sharing}
+                                        >
+                                            Close
+                                        </button>
+
+                                        <button
+                                            type="submit"
+                                            className="share-submit-btn"
+                                            disabled={sharing || !!shareSuccess}
+                                        >
+                                            {sharing ? "Sharing..." : "Share File"}
+                                        </button>
+
+                                    </div>
+
+                                </form>
+
+                            </div>
+
+                        </div>
+
+                    )}
 
 
                     {/* DELETE CONFIRMATION MODAL */}
@@ -793,11 +967,8 @@ function MyFiles() {
                             <div className="delete-modal">
 
                                 <div className="delete-modal-icon">
-
                                     <AlertTriangle size={27} />
-
                                 </div>
-
 
                                 <button
                                     className="delete-modal-close"
@@ -807,11 +978,8 @@ function MyFiles() {
                                     }}
                                     disabled={deleting}
                                 >
-
                                     <X size={20} />
-
                                 </button>
-
 
                                 <h2>Delete this file?</h2>
 
@@ -821,15 +989,11 @@ function MyFiles() {
                                     You won't be able to recover it.
                                 </p>
 
-
                                 {deleteError && (
-
                                     <p className="delete-error">
                                         {deleteError}
                                     </p>
-
                                 )}
-
 
                                 <div className="delete-modal-actions">
 
@@ -841,23 +1005,15 @@ function MyFiles() {
                                         }}
                                         disabled={deleting}
                                     >
-
                                         Cancel
-
                                     </button>
-
 
                                     <button
                                         className="confirm-delete-btn"
                                         onClick={handleDelete}
                                         disabled={deleting}
                                     >
-
-                                        {deleting
-                                            ? "Deleting..."
-                                            : "Delete File"
-                                        }
-
+                                        {deleting ? "Deleting..." : "Delete File"}
                                     </button>
 
                                 </div>
@@ -872,11 +1028,8 @@ function MyFiles() {
                     {/* FOOTER */}
 
                     <footer className="dashboard-footer">
-
                         CloudSpace © 2026 · Secure file storage and sharing
-
                     </footer>
-
 
                 </div>
 

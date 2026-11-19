@@ -12,10 +12,12 @@ import Register from "./pages/Register";
 import VerifyEmail from "./pages/VerifyEmail";
 import Login from "./pages/Login";
 import MyFiles from "./pages/MyFiles";
+import SharedFile from "./pages/SharedFile";
+import SharedFiles from "./pages/SharedFiles";
+import RecentFiles from "./pages/RecentFiles";
 
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
-
 
 function App() {
 
@@ -44,7 +46,6 @@ function App() {
                         element={<Login />}
                     />
 
-
                     {/* Protected Routes */}
 
                     <Route element={<ProtectedRoute />}>
@@ -59,8 +60,22 @@ function App() {
                             element={<MyFiles />}
                         />
 
-                    </Route>
+                        <Route
+                            path="/shared-files"
+                            element={<SharedFiles />}
+                        />
 
+                        <Route
+                            path="/recent-files"
+                            element={<RecentFiles />}
+                        />
+
+                        <Route
+                            path="/shared-file/:fileId"
+                            element={<SharedFile />}
+                        />
+
+                    </Route>
 
                     {/* Unknown Routes */}
 

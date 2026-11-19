@@ -1,11 +1,12 @@
 import React from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
 
 function ProtectedRoute() {
 
     const { user, loading } = useAuth();
+    const location = useLocation();
 
     // Wait until authentication check is complete
     if (loading) {
@@ -16,9 +17,15 @@ function ProtectedRoute() {
         );
     }
 
-    // Redirect if user is not logged in
+    // Redirect to login and remember the requested page
     if (!user) {
-        return <Navigate to="/login" replace />;
+        return (
+            <Navigate
+                to="/login"
+                state={{ from: location }}
+                replace
+            />
+        );
     }
 
     // Allow authenticated users

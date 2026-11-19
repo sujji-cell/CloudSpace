@@ -12,7 +12,6 @@ function Login() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Get global authentication state
     const { setUser } = useAuth();
 
     const [formData, setFormData] = useState({
@@ -57,10 +56,8 @@ function Login() {
             setLoading(true);
 
             const response = await api.post("/auth/login", {
-
                 email: email.trim().toLowerCase(),
                 password
-
             });
 
             console.log("Login Response:", response.data);
@@ -72,7 +69,7 @@ function Login() {
 
             }
 
-            // Store logged-in user in global authentication state
+            // Store logged-in user
             const loggedInUser = response.data.user;
 
             if (!loggedInUser) {
@@ -82,8 +79,14 @@ function Login() {
 
             setUser(loggedInUser);
 
-            // Navigate to dashboard
-            navigate("/", { replace: true });
+            // Return to the originally requested page
+            const redirectPath = location.state?.from
+                ? location.state.from.pathname +
+                  location.state.from.search +
+                  location.state.from.hash
+                : "/";
+
+            navigate(redirectPath, { replace: true });
 
         } catch (err) {
 
