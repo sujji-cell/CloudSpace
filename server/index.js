@@ -7,6 +7,7 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import fileRoutes from "./routes/fileRoutes.js";
 import shareRoutes from "./routes/shareRoutes.js";
+import favoriteRoutes from "./routes/favoriteRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -34,6 +35,9 @@ app.use("/api/files", fileRoutes);
 
 // Share File
 app.use("/api/shares", shareRoutes);
+
+// Favorite Files
+app.use("/api/favorites", favoriteRoutes);
 
 // Start Server
 

@@ -20,7 +20,8 @@ import {
     X,
     AlertTriangle,
     Share2,
-    Copy
+    Copy,
+    Star
 } from "lucide-react";
 
 import "./MyFiles.css";
@@ -38,6 +39,10 @@ function MyFiles() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedType, setSelectedType] = useState("All Files");
     const [sortOrder, setSortOrder] = useState("newest");
+
+    // Favourite states
+    const [favoriteIds, setFavoriteIds] = useState([]);
+    const [favoriteUpdatingId, setFavoriteUpdatingId] = useState(null);
 
     // Delete states
     const [deleteFileId, setDeleteFileId] = useState(null);
@@ -91,8 +96,88 @@ function MyFiles() {
     };
 
 
+    // --------------------------------
+    // FETCH USER FAVOURITES
+    // --------------------------------
+
+    const fetchFavorites = async () => {
+
+        try {
+
+            const response = await api.get("/favorites");
+
+            const ids = (response.data.favorites || [])
+                .map((favorite) => favorite.file?._id)
+                .filter(Boolean);
+
+            setFavoriteIds(ids);
+
+        } catch (error) {
+
+            console.error("Error fetching favourites:", error);
+
+        }
+
+    };
+
+
+    // --------------------------------
+    // ADD / REMOVE FAVOURITE
+    // --------------------------------
+
+    const handleFavorite = async (fileId) => {
+
+        try {
+
+            setFavoriteUpdatingId(fileId);
+
+            if (favoriteIds.includes(fileId)) {
+
+                await api.delete(`/favorites/${fileId}`);
+
+                setFavoriteIds((prev) =>
+                    prev.filter((id) => id !== fileId)
+                );
+
+            } else {
+
+                await api.post(`/favorites/${fileId}`);
+
+                setFavoriteIds((prev) => [...prev, fileId]);
+
+            }
+
+            window.dispatchEvent(
+                new Event("cloudspace-favorites-updated")
+            );
+
+        } catch (error) {
+
+            console.error("Favourite error:", error);
+
+            alert(
+                error.response?.data?.message ||
+                "Unable to update favourite."
+            );
+
+        } finally {
+
+            setFavoriteUpdatingId(null);
+
+        }
+
+    };
+
+
+    // --------------------------------
+    // INITIAL DATA FETCH
+    // --------------------------------
+
     useEffect(() => {
+
         fetchFiles();
+        fetchFavorites();
+
     }, []);
 
 
@@ -480,8 +565,17 @@ function MyFiles() {
                 prevFiles.filter((file) => file._id !== deleteFileId)
             );
 
+            // Remove deleted file from local favourites too
+            setFavoriteIds((prev) =>
+                prev.filter((id) => id !== deleteFileId)
+            );
+
             window.dispatchEvent(
                 new Event("cloudspace-files-updated")
+            );
+
+            window.dispatchEvent(
+                new Event("cloudspace-favorites-updated")
             );
 
             setDeleteFileId(null);
@@ -548,7 +642,10 @@ function MyFiles() {
 
                         <button
                             className="myfiles-refresh"
-                            onClick={fetchFiles}
+                            onClick={() => {
+                                fetchFiles();
+                                fetchFavorites();
+                            }}
                             disabled={loading}
                         >
                             <RefreshCw size={17} />
@@ -737,6 +834,9 @@ function MyFiles() {
                                 const isAccessing =
                                     accessingFileId === file._id;
 
+                                const isFavorite =
+                                    favoriteIds.includes(file._id);
+
                                 return (
 
                                     <div
@@ -781,6 +881,35 @@ function MyFiles() {
 
                                         <div className="myfiles-actions">
 
+                                            {/* FAVOURITE BUTTON */}
+
+                                            <button
+                                                title={
+                                                    isFavorite
+                                                        ? "Remove from Favourites"
+                                                        : "Add to Favourites"
+                                                }
+                                                className={
+                                                    isFavorite
+                                                        ? "favorite-file-btn active"
+                                                        : "favorite-file-btn"
+                                                }
+                                                disabled={favoriteUpdatingId === file._id}
+                                                onClick={() => handleFavorite(file._id)}
+                                            >
+                                                <Star
+                                                    size={18}
+                                                    fill={
+                                                        isFavorite
+                                                            ? "currentColor"
+                                                            : "none"
+                                                    }
+                                                />
+                                            </button>
+
+
+                                            {/* PREVIEW */}
+
                                             <button
                                                 title="Preview"
                                                 disabled={isAccessing}
@@ -788,6 +917,9 @@ function MyFiles() {
                                             >
                                                 <Eye size={18} />
                                             </button>
+
+
+                                            {/* DOWNLOAD */}
 
                                             <button
                                                 title="Download"
@@ -797,6 +929,9 @@ function MyFiles() {
                                                 <Download size={18} />
                                             </button>
 
+
+                                            {/* SHARE */}
+
                                             <button
                                                 title="Share"
                                                 className="share-file-btn"
@@ -804,6 +939,9 @@ function MyFiles() {
                                             >
                                                 <Share2 size={18} />
                                             </button>
+
+
+                                            {/* DELETE */}
 
                                             <button
                                                 title="Delete"

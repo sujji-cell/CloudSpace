@@ -960,3 +960,46 @@
   }
 
 }
+
+/* --------------------------------
+   FAVOURITE COUNT BADGE
+-------------------------------- */
+
+.favorite-count-badge {
+    margin-left: auto;
+    min-width: 21px;
+    height: 21px;
+    padding: 0 6px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #eeeefe;
+    color: #6258f5;
+
+    border-radius: 20px;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* Active sidebar favourite badge */
+
+.sidebar-link.active .favorite-count-badge {
+    background: #6258f5;
+    color: #ffffff;
+}
+
+/* --------------------------------
+   SHARED FILE FAVOURITE BUTTON
+-------------------------------- */
+
+.shared-favorite-button.active {
+    color: #6258f5;
+}
+
+.shared-favorite-button:hover {
+    color: #6258f5;
+    background: #eeeefe;
+}

@@ -15,6 +15,7 @@ import MyFiles from "./pages/MyFiles";
 import SharedFile from "./pages/SharedFile";
 import SharedFiles from "./pages/SharedFiles";
 import RecentFiles from "./pages/RecentFiles";
+import Favorites from "./pages/Favorites";
 
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -46,6 +47,7 @@ function App() {
                         element={<Login />}
                     />
 
+
                     {/* Protected Routes */}
 
                     <Route element={<ProtectedRoute />}>
@@ -71,11 +73,17 @@ function App() {
                         />
 
                         <Route
+                            path="/favorites"
+                            element={<Favorites />}
+                        />
+
+                        <Route
                             path="/shared-file/:fileId"
                             element={<SharedFile />}
                         />
 
                     </Route>
+
 
                     {/* Unknown Routes */}
 

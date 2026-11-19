@@ -29,13 +29,18 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
     const { user, setUser } = useAuth();
 
     const [storageUsed, setStorageUsed] = useState(0);
+    const [favoriteCount, setFavoriteCount] = useState(0);
+
+    // --------------------------------
+    // SIDEBAR MENU ITEMS
+    // --------------------------------
 
     const menuItems = [
         { title: "Dashboard", icon: LayoutDashboard, path: "/" },
         { title: "My Files", icon: FolderOpen, path: "/my-files" },
         { title: "Shared Files", icon: Share2, path: "/shared-files" },
         { title: "Recent", icon: Clock3, path: "/recent-files" },
-        { title: "Favourites", icon: Star, path: null }
+        { title: "Favourites", icon: Star, path: "/favorites" }
     ];
 
     const currentActiveItem =
@@ -43,30 +48,36 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
         activeItem ||
         "";
 
+
+    // --------------------------------
+    // FETCH STORAGE INFORMATION
+    // --------------------------------
+
+    const fetchStorage = async () => {
+
+        try {
+
+            const response = await api.get("/files");
+
+            const files = response.data.files || [];
+
+            const totalSize = files.reduce(
+                (total, file) => total + (file.size || 0),
+                0
+            );
+
+            setStorageUsed(totalSize);
+
+        } catch (error) {
+
+            console.error("Unable to fetch storage:", error);
+
+        }
+
+    };
+
+
     useEffect(() => {
-
-        const fetchStorage = async () => {
-
-            try {
-
-                const response = await api.get("/files");
-
-                const files = response.data.files || [];
-
-                const totalSize = files.reduce(
-                    (total, file) => total + (file.size || 0),
-                    0
-                );
-
-                setStorageUsed(totalSize);
-
-            } catch (error) {
-
-                console.error("Unable to fetch storage:", error);
-
-            }
-
-        };
 
         fetchStorage();
 
@@ -86,6 +97,58 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
     }, []);
 
+
+    // --------------------------------
+    // FETCH FAVOURITE COUNT
+    // --------------------------------
+
+    const fetchFavoriteCount = async () => {
+
+        try {
+
+            const response = await api.get("/favorites");
+
+            setFavoriteCount(
+                (response.data.favorites || []).length
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Unable to fetch favourite count:",
+                error
+            );
+
+        }
+
+    };
+
+
+    useEffect(() => {
+
+        fetchFavoriteCount();
+
+        window.addEventListener(
+            "cloudspace-favorites-updated",
+            fetchFavoriteCount
+        );
+
+        return () => {
+
+            window.removeEventListener(
+                "cloudspace-favorites-updated",
+                fetchFavoriteCount
+            );
+
+        };
+
+    }, []);
+
+
+    // --------------------------------
+    // FORMAT STORAGE SIZE
+    // --------------------------------
+
     const formatSize = (bytes) => {
 
         if (bytes < 1024) return `${bytes} B`;
@@ -101,6 +164,11 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
         return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 
     };
+
+
+    // --------------------------------
+    // USER INFORMATION
+    // --------------------------------
 
     const fullName = [
         user?.firstName,
@@ -123,6 +191,11 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
         100
     );
 
+
+    // --------------------------------
+    // NAVIGATION
+    // --------------------------------
+
     const handleNavigation = (item) => {
 
         if (!item.path) return;
@@ -134,6 +207,11 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
         onClose?.();
 
     };
+
+
+    // --------------------------------
+    // LOGOUT
+    // --------------------------------
 
     const handleLogout = async () => {
 
@@ -155,6 +233,11 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
     };
 
+
+    // --------------------------------
+    // SIDEBAR UI
+    // --------------------------------
+
     return (
 
         <>
@@ -167,6 +250,8 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
             )}
 
             <aside className={`sidebar ${isOpen ? "sidebar-open" : ""}`}>
+
+                {/* SIDEBAR HEADER */}
 
                 <div className="sidebar-header">
 
@@ -190,9 +275,17 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                 </div>
 
+
+                {/* SIDEBAR CONTENT */}
+
                 <div className="sidebar-content">
 
-                    <p className="sidebar-label">WORKSPACE</p>
+                    <p className="sidebar-label">
+                        WORKSPACE
+                    </p>
+
+
+                    {/* NAVIGATION MENU */}
 
                     <nav className="sidebar-menu">
 
@@ -210,12 +303,25 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
                                             : ""
                                     }`}
                                     onClick={() => handleNavigation(item)}
-                                    disabled={!item.path}
                                 >
 
-                                    <Icon size={19} strokeWidth={1.8} />
+                                    <Icon
+                                        size={19}
+                                        strokeWidth={1.8}
+                                    />
 
                                     <span>{item.title}</span>
+
+                                    {/* FAVOURITE COUNT BADGE */}
+
+                                    {item.title === "Favourites" &&
+                                        favoriteCount > 0 && (
+
+                                            <span className="favorite-count-badge">
+                                                {favoriteCount}
+                                            </span>
+
+                                        )}
 
                                 </button>
 
@@ -225,7 +331,13 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                     </nav>
 
+
+                    {/* BOTTOM SECTION */}
+
                     <div className="sidebar-bottom">
+
+
+                        {/* STORAGE CARD */}
 
                         <div className="storage-card">
 
@@ -236,6 +348,7 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
                                 <span>Storage</span>
 
                             </div>
+
 
                             <div className="storage-progress">
 
@@ -248,16 +361,21 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                             </div>
 
+
                             <p>
                                 {formatSize(storageUsed)} of{" "}
                                 {formatSize(storageLimit)} used
                             </p>
+
 
                             <button className="upgrade-btn">
                                 Manage storage
                             </button>
 
                         </div>
+
+
+                        {/* SETTINGS */}
 
                         <button
                             className={`sidebar-link settings-link ${
@@ -277,6 +395,9 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                         </button>
 
+
+                        {/* LOGOUT */}
+
                         <button
                             className="sidebar-link"
                             onClick={handleLogout}
@@ -291,6 +412,9 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
                     </div>
 
                 </div>
+
+
+                {/* USER PROFILE */}
 
                 <div className="sidebar-footer">
 
