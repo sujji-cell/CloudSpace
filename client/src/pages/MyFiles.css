@@ -1232,3 +1232,303 @@
     margin: 0;
     font-size: 13px;
 }
+
+/* =========================================
+   MY FILES - DARK THEME
+========================================= */
+
+/* PAGE HEADING */
+html[data-theme="dark"] .myfiles-heading h1,
+html[data-theme="dark"] .myfiles-stat-card h3,
+html[data-theme="dark"] .myfiles-table-heading h2,
+html[data-theme="dark"] .myfiles-name h4,
+html[data-theme="dark"] .myfiles-empty h3 {
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .myfiles-heading p,
+html[data-theme="dark"] .myfiles-label,
+html[data-theme="dark"] .myfiles-stat-card p,
+html[data-theme="dark"] .myfiles-table-heading p,
+html[data-theme="dark"] .myfiles-name p {
+    color: #a0a1ad;
+}
+
+/* REFRESH BUTTON */
+html[data-theme="dark"] .myfiles-refresh {
+    background: #252630;
+    border-color: #41424e;
+    color: #aaaaff;
+}
+
+/* STATISTICS */
+html[data-theme="dark"] .myfiles-stat-card {
+    background: #1b1c23;
+    border-color: #30313b;
+    color: #aaaaff;
+}
+
+/* SEARCH AND FILTERS */
+html[data-theme="dark"] .myfiles-search,
+html[data-theme="dark"] .myfiles-filter,
+html[data-theme="dark"] .myfiles-sort {
+    background: #252630;
+    border-color: #41424e;
+    color: #c0c1cc;
+}
+
+html[data-theme="dark"] .myfiles-search input,
+html[data-theme="dark"] .myfiles-filter select,
+html[data-theme="dark"] .myfiles-sort {
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .myfiles-search input::placeholder {
+    color: #858693;
+}
+
+html[data-theme="dark"] .myfiles-filter select option {
+    background: #252630;
+    color: #f0f0f5;
+}
+
+/* FILE TABLE */
+html[data-theme="dark"] .myfiles-table-section {
+    background: #1b1c23;
+    border-color: #30313b;
+}
+
+html[data-theme="dark"] .myfiles-table-heading {
+    border-color: #30313b;
+}
+
+html[data-theme="dark"] .myfiles-table-header {
+    background: #252630;
+    border-color: #383944;
+    color: #a0a1ad;
+}
+
+html[data-theme="dark"] .myfiles-row {
+    border-color: #30313b;
+    color: #c0c1cc;
+}
+
+html[data-theme="dark"] .myfiles-row:hover {
+    background: #252630;
+}
+
+/* FILE ACTIONS */
+html[data-theme="dark"] .myfiles-actions button {
+    color: #a5a6b3;
+}
+
+html[data-theme="dark"] .myfiles-actions button:hover {
+    background: #30304e;
+    color: #aaaaff;
+}
+
+/* EMPTY AND LOADING STATES */
+html[data-theme="dark"] .myfiles-message,
+html[data-theme="dark"] .myfiles-empty p {
+    color: #a0a1ad;
+}
+
+html[data-theme="dark"] .myfiles-empty-icon {
+    background: #30304e;
+    color: #aaaaff;
+}
+
+/* =========================================
+   FOLDER SECTION
+========================================= */
+
+html[data-theme="dark"] .folder-breadcrumb {
+    color: #a0a1ad;
+}
+
+html[data-theme="dark"] .folder-breadcrumb button {
+    color: #c0c1cc;
+}
+
+html[data-theme="dark"] .breadcrumb-current {
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .back-folder-btn {
+    background: #252630;
+    border-color: #41424e;
+    color: #aaaaff;
+}
+
+html[data-theme="dark"] .folders-section {
+    background: #1b1c23;
+    border-color: #30313b;
+}
+
+html[data-theme="dark"] .folders-section-heading h2,
+html[data-theme="dark"] .folder-card-info h3 {
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .folders-section-heading p,
+html[data-theme="dark"] .folder-card-info p,
+html[data-theme="dark"] .folder-empty-message {
+    color: #a0a1ad;
+}
+
+html[data-theme="dark"] .folder-card {
+    background: #252630;
+    border-color: #41424e;
+}
+
+html[data-theme="dark"] .folder-card:hover {
+    background: #30313d;
+    border-color: #7777ff;
+}
+
+html[data-theme="dark"] .folder-card-icon {
+    background: #30304e;
+    color: #aaaaff;
+}
+
+html[data-theme="dark"] .folder-card-actions button {
+    color: #a5a6b3;
+}
+
+html[data-theme="dark"] .folder-card-actions button:hover {
+    background: #30304e;
+    color: #aaaaff;
+}
+
+/* =========================================
+   DELETE MODAL
+========================================= */
+
+html[data-theme="dark"] .delete-modal,
+html[data-theme="dark"] .folder-modal {
+    background: #1b1c23;
+    border: 1px solid #30313b;
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .delete-modal h2,
+html[data-theme="dark"] .folder-modal h2 {
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .delete-modal > p,
+html[data-theme="dark"] .folder-modal > p {
+    color: #a0a1ad;
+}
+
+html[data-theme="dark"] .delete-modal-close,
+html[data-theme="dark"] .folder-modal-close {
+    color: #a0a1ad;
+}
+
+html[data-theme="dark"] .cancel-delete-btn,
+html[data-theme="dark"] .folder-modal-actions button {
+    background: #252630;
+    border-color: #41424e;
+    color: #dedee8;
+}
+
+html[data-theme="dark"] .folder-modal form label {
+    color: #dedee8;
+}
+
+html[data-theme="dark"] .folder-modal form input {
+    background: #252630;
+    border-color: #41424e;
+    color: #f0f0f5;
+}
+
+/* =========================================
+   SHARE MODAL
+========================================= */
+
+html[data-theme="dark"] .share-modal {
+    background: #1b1c23;
+    border: 1px solid #30313b;
+}
+
+html[data-theme="dark"] .share-modal h2 {
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .share-modal-description,
+html[data-theme="dark"] .share-link-section small {
+    color: #a0a1ad;
+}
+
+html[data-theme="dark"] .share-modal-close {
+    background: #30313b;
+    color: #c0c1cc;
+}
+
+html[data-theme="dark"] .share-modal-close:hover {
+    background: #41424e;
+    color: #ffffff;
+}
+
+html[data-theme="dark"] .share-file-info,
+html[data-theme="dark"] .share-link-section {
+    background: #252630;
+    border-color: #41424e;
+    color: #dedee8;
+}
+
+html[data-theme="dark"] .share-link-section > p,
+html[data-theme="dark"] .share-modal form label {
+    color: #dedee8;
+}
+
+html[data-theme="dark"] .share-modal form input {
+    background: #252630;
+    border-color: #41424e;
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .share-modal form input::placeholder {
+    color: #858693;
+}
+
+html[data-theme="dark"] .share-modal form input:disabled {
+    background: #20212a;
+}
+
+html[data-theme="dark"] .share-cancel-btn {
+    background: #30313b;
+    border-color: #41424e;
+    color: #dedee8;
+}
+
+html[data-theme="dark"] .copy-share-link-btn {
+    background: #30304e;
+    border-color: #6262ef;
+    color: #aaaaff;
+}
+
+html[data-theme="dark"] .copy-share-link-btn:hover {
+    background: #5555ef;
+    color: #ffffff;
+}
+
+/* MOVE FILE MODAL */
+html[data-theme="dark"] .move-folder-select {
+    background: #252630;
+    border-color: #41424e;
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .move-folder-select option {
+    background: #252630;
+    color: #f0f0f5;
+}
+
+/* RECYCLE BIN NOTICE */
+html[data-theme="dark"] .recycle-bin-notice {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.25);
+    color: #fbbf24;
+}

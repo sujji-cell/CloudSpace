@@ -533,6 +533,182 @@ export const getCurrentUser = async (req, res) => {
 
 
 // ==========================================
+// UPDATE USER PROFILE
+// ==========================================
+
+export const updateProfile = async (req, res) => {
+
+    try {
+
+        const {
+            firstName,
+            middleName,
+            lastName
+        } = req.body;
+
+        // Validate first name
+        if (!firstName || !firstName.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "First name is required."
+            });
+        }
+
+        // Find authenticated user
+        const user = await User.findById(req.userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found."
+            });
+        }
+
+        // Clean name fields
+        const cleanFirstName = firstName.trim();
+        const cleanMiddleName = middleName?.trim() || "";
+        const cleanLastName = lastName?.trim() || "";
+
+        // Update user details
+        user.firstName = cleanFirstName;
+        user.middleName = cleanMiddleName;
+        user.lastName = cleanLastName;
+
+        // Update full name
+        user.name = [
+            cleanFirstName,
+            cleanMiddleName,
+            cleanLastName
+        ].filter(Boolean).join(" ");
+
+        await user.save();
+
+        return res.status(200).json({
+
+            success: true,
+
+            message: "Profile updated successfully.",
+
+            user: {
+                id: user._id,
+                firstName: user.firstName,
+                middleName: user.middleName,
+                lastName: user.lastName,
+                name: user.name,
+                email: user.email,
+                storageUsed: user.storageUsed,
+                storageLimit: user.storageLimit,
+                createdAt: user.createdAt
+            }
+
+        });
+
+    } catch (error) {
+
+        console.error("Update profile error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to update profile."
+        });
+
+    }
+
+};
+
+
+// ==========================================
+// CHANGE USER PASSWORD
+// ==========================================
+
+export const changePassword = async (req, res) => {
+
+    try {
+
+        const {
+            currentPassword,
+            newPassword
+        } = req.body;
+
+        // Validate input
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Current password and new password are required."
+            });
+        }
+
+        // Validate new password length
+        if (newPassword.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: "New password must contain at least 8 characters."
+            });
+        }
+
+        // Prevent reusing the current password
+        if (currentPassword === newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "New password must be different from your current password."
+            });
+        }
+
+        // Retrieve user with hashed password
+        const user = await User.findById(req.userId)
+            .select("+password");
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found."
+            });
+        }
+
+        // Verify current password
+        const isPasswordCorrect = await bcrypt.compare(
+            currentPassword,
+            user.password
+        );
+
+        if (!isPasswordCorrect) {
+            return res.status(400).json({
+                success: false,
+                message: "Current password is incorrect."
+            });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+        // Update password
+        user.password = hashedPassword;
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Password changed successfully."
+        });
+
+    } catch (error) {
+
+        console.error("Change password error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to change password. Please try again."
+        });
+
+    }
+
+};
+
+
+
+
+
+// ==========================================
 // LOGOUT USER
 // ==========================================
 
@@ -548,4 +724,190 @@ export const logoutUser = (req, res) => {
         success: true,
         message: "Logged out successfully."
     });
+};
+
+// Get Notification Preferences
+export const getNotificationPreferences = async (req, res) => {
+
+    try {
+
+        const user = await User.findById(req.userId);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        return res.status(200).json({
+            message: "Notification preferences fetched successfully",
+            preferences: user.notificationPreferences
+        });
+
+    } catch (error) {
+
+        console.error("Get Notification Preferences Error:", error);
+
+        return res.status(500).json({
+            message: "Failed to fetch notification preferences"
+        });
+    }
+};
+
+
+// Update Notification Preferences
+export const updateNotificationPreferences = async (req, res) => {
+
+    try {
+
+        const { email, inApp } = req.body;
+
+        // Validate request data
+        if (!email || !inApp) {
+            return res.status(400).json({
+                message: "Notification preferences are required"
+            });
+        }
+
+        const preferenceValues = [
+            email.fileSharing,
+            email.fileUploads,
+            email.securityAlerts,
+            inApp.sharedFileUpdates,
+            inApp.storageAlerts,
+            inApp.accountActivity
+        ];
+
+        if (!preferenceValues.every(value => typeof value === "boolean")) {
+            return res.status(400).json({
+                message: "All notification preferences must be boolean values"
+            });
+        }
+
+        const user = await User.findById(req.userId);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        // Update preferences
+        user.notificationPreferences = {
+            email: {
+                fileSharing: email.fileSharing,
+                fileUploads: email.fileUploads,
+                securityAlerts: email.securityAlerts
+            },
+
+            inApp: {
+                sharedFileUpdates: inApp.sharedFileUpdates,
+                storageAlerts: inApp.storageAlerts,
+                accountActivity: inApp.accountActivity
+            }
+        };
+
+        await user.save();
+
+        return res.status(200).json({
+            message: "Notification preferences updated successfully",
+            preferences: user.notificationPreferences
+        });
+
+    } catch (error) {
+
+        console.error("Update Notification Preferences Error:", error);
+
+        return res.status(500).json({
+            message: "Failed to update notification preferences"
+        });
+    }
+};
+
+// Get Appearance Preferences
+export const getAppearancePreferences = async (req, res) => {
+
+    try {
+
+        const user = await User.findById(req.userId);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        return res.status(200).json({
+            message: "Appearance preferences fetched successfully",
+            preferences: user.appearancePreferences
+        });
+
+    } catch (error) {
+
+        console.error("Get Appearance Preferences Error:", error);
+
+        return res.status(500).json({
+            message: "Failed to fetch appearance preferences"
+        });
+    }
+};
+
+
+// Update Appearance Preferences
+export const updateAppearancePreferences = async (req, res) => {
+
+    try {
+
+        const { theme, accentColor, sidebar, density } = req.body;
+
+        const allowedValues = {
+            theme: ["light", "dark", "system"],
+            accentColor: ["blue", "purple", "green", "orange"],
+            sidebar: ["expanded", "collapsed"],
+            density: ["comfortable", "compact"]
+        };
+
+        // Validate all preferences
+        if (
+            !allowedValues.theme.includes(theme) ||
+            !allowedValues.accentColor.includes(accentColor) ||
+            !allowedValues.sidebar.includes(sidebar) ||
+            !allowedValues.density.includes(density)
+        ) {
+            return res.status(400).json({
+                message: "Invalid appearance preferences"
+            });
+        }
+
+        const user = await User.findById(req.userId);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        // Update appearance preferences
+        user.appearancePreferences = {
+            theme,
+            accentColor,
+            sidebar,
+            density
+        };
+
+        await user.save();
+
+        return res.status(200).json({
+            message: "Appearance preferences updated successfully",
+            preferences: user.appearancePreferences
+        });
+
+    } catch (error) {
+
+        console.error("Update Appearance Preferences Error:", error);
+
+        return res.status(500).json({
+            message: "Failed to update appearance preferences"
+        });
+    }
 };

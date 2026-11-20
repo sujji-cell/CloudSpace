@@ -330,11 +330,10 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                                 <button
                                     key={item.title}
-                                    className={`sidebar-link ${
-                                        currentActiveItem === item.title
-                                            ? "active"
-                                            : ""
-                                    }`}
+                                    className={`sidebar-link ${currentActiveItem === item.title
+                                        ? "active"
+                                        : ""
+                                        }`}
                                     onClick={() => handleNavigation(item)}
                                 >
 
@@ -424,13 +423,13 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
                         {/* SETTINGS */}
 
                         <button
-                            className={`sidebar-link settings-link ${
-                                currentActiveItem === "Settings"
-                                    ? "active"
-                                    : ""
-                            }`}
+                            className={`sidebar-link settings-link ${currentActiveItem === "Settings"
+                                ? "active"
+                                : ""
+                                }`}
                             onClick={() => {
                                 setActiveItem?.("Settings");
+                                navigate("/settings");
                                 onClose?.();
                             }}
                         >
@@ -462,7 +461,26 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                 {/* USER PROFILE */}
 
-                <div className="sidebar-footer">
+                <div
+                    className="sidebar-footer"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                        navigate("/account");
+                        onClose?.();
+                    }}
+                    onKeyDown={(event) => {
+                        if (
+                            event.key === "Enter" ||
+                            event.key === " "
+                        ) {
+                            event.preventDefault();
+                            navigate("/account");
+                            onClose?.();
+                        }
+                    }}
+                    title="View Account"
+                >
 
                     <div className="user-avatar">
                         {initials || "U"}

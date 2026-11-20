@@ -1,6 +1,5 @@
 import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-
 import { useAuth } from "../context/AuthContext";
 
 function ProtectedRoute() {
@@ -8,17 +7,18 @@ function ProtectedRoute() {
     const { user, loading } = useAuth();
     const location = useLocation();
 
-    // Wait until authentication check is complete
+    console.log("ProtectedRoute Debug:", {
+        pathname: location.pathname,
+        loading,
+        user
+    });
+
     if (loading) {
-        return (
-            <div className="auth-loading">
-                <h3>Checking authentication...</h3>
-            </div>
-        );
+        return <h3>Checking authentication...</h3>;
     }
 
-    // Redirect to login and remember the requested page
     if (!user) {
+        console.log("Redirecting to login...");
         return (
             <Navigate
                 to="/login"
@@ -28,7 +28,8 @@ function ProtectedRoute() {
         );
     }
 
-    // Allow authenticated users
+    console.log("Authentication successful. Rendering:", location.pathname);
+
     return <Outlet />;
 }
 

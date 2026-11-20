@@ -20,6 +20,8 @@ import RecycleBin from "./pages/RecycleBin";
 
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import Account from "./pages/Account";
+import Settings from "./pages/Settings";
 
 function App() {
 
@@ -48,6 +50,7 @@ function App() {
                         element={<Login />}
                     />
 
+                    
 
                     {/* Protected Routes */}
 
@@ -87,6 +90,16 @@ function App() {
                             path="/shared-file/:fileId"
                             element={<SharedFile />}
                         />
+
+
+                        <Route path="/account" element={<Account />} />
+
+                        <Route
+                        path="/settings"
+                        element={<Settings />}
+                    />
+
+
 
                     </Route>
 

@@ -1,5 +1,75 @@
 import mongoose from "mongoose";
 
+// Notification Preferences Schema
+const notificationPreferencesSchema = new mongoose.Schema(
+    {
+        email: {
+            fileSharing: {
+                type: Boolean,
+                default: true
+            },
+            fileUploads: {
+                type: Boolean,
+                default: true
+            },
+            securityAlerts: {
+                type: Boolean,
+                default: true
+            }
+        },
+
+        inApp: {
+            sharedFileUpdates: {
+                type: Boolean,
+                default: true
+            },
+            storageAlerts: {
+                type: Boolean,
+                default: true
+            },
+            accountActivity: {
+                type: Boolean,
+                default: true
+            }
+        }
+    },
+    {
+        _id: false
+    }
+);
+
+// Appearance Preferences Schema
+const appearancePreferencesSchema = new mongoose.Schema(
+    {
+        theme: {
+            type: String,
+            enum: ["light", "dark", "system"],
+            default: "light"
+        },
+
+        accentColor: {
+            type: String,
+            enum: ["blue", "purple", "green", "orange"],
+            default: "blue"
+        },
+
+        sidebar: {
+            type: String,
+            enum: ["expanded", "collapsed"],
+            default: "expanded"
+        },
+
+        density: {
+            type: String,
+            enum: ["comfortable", "compact"],
+            default: "comfortable"
+        }
+    },
+    {
+        _id: false
+    }
+);
+
 const userSchema = new mongoose.Schema(
     {
         // First Name - Required
@@ -74,6 +144,18 @@ const userSchema = new mongoose.Schema(
         emailOtpLastSentAt: {
             type: Date
         },
+
+        // User Notification Preferences
+        notificationPreferences: {
+            type: notificationPreferencesSchema,
+            default: () => ({})
+        },
+
+        // User Appearance Preferences
+appearancePreferences: {
+    type: appearancePreferencesSchema,
+    default: () => ({})
+},
 
         // Total Storage Used (Bytes)
         storageUsed: {

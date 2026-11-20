@@ -175,6 +175,19 @@
   padding: 18px;
   border-top: 1px solid #eeeef2;
 }
+.sidebar-footer {
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.sidebar-footer:hover {
+  background: #f5f5fc;
+}
+
+.sidebar-footer:focus-visible {
+  outline: 2px solid #595ce9;
+  outline-offset: -2px;
+}
 
 .user-avatar,
 .profile-avatar {
@@ -304,6 +317,24 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.navbar-profile:hover {
+  background-color: #f1f5ff;
+  box-shadow: 0 2px 8px rgba(65, 105, 225, 0.08);
+}
+
+.navbar-profile:active {
+  background-color: #e8edff;
+}
+
+.navbar-profile:focus-visible {
+  outline: 2px solid #4169e1;
+  outline-offset: 2px;
 }
 
 .profile-avatar {
@@ -1002,4 +1033,491 @@
 .shared-favorite-button:hover {
     color: #6258f5;
     background: #eeeefe;
+}
+
+/* ==========================================
+   GLOBAL DARK THEME
+========================================== */
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] #root,
+html[data-theme="dark"] .app-layout {
+    background: #121318;
+    color: #e8e9ef;
+}
+
+/* SIDEBAR */
+
+html[data-theme="dark"] .sidebar {
+    background: #1b1c23;
+    border-color: #30313b;
+}
+
+html[data-theme="dark"] .sidebar-header,
+html[data-theme="dark"] .sidebar-footer {
+    border-color: #30313b;
+}
+
+html[data-theme="dark"] .brand,
+html[data-theme="dark"] .user-info h4,
+html[data-theme="dark"] .profile-details h4 {
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .sidebar-link {
+    color: #a5a6b3;
+}
+
+html[data-theme="dark"] .sidebar-link:hover {
+    background: #292a35;
+    color: #a5a5ff;
+}
+
+html[data-theme="dark"] .sidebar-link.active {
+    background: #30304e;
+    color: #aaaaff;
+}
+
+html[data-theme="dark"] .storage-card {
+    background: #252630;
+}
+
+html[data-theme="dark"] .storage-card p,
+html[data-theme="dark"] .user-info p {
+    color: #a0a1ad;
+}
+
+html[data-theme="dark"] .storage-progress {
+    background: #41424e;
+}
+
+html[data-theme="dark"] .upgrade-btn {
+    background: #292a39;
+    border-color: #414254;
+    color: #aaaaff;
+}
+
+html[data-theme="dark"] .upgrade-btn:hover {
+    background: #35364b;
+}
+
+html[data-theme="dark"] .sidebar-footer:hover {
+    background: #292a35;
+}
+
+/* NAVBAR */
+
+html[data-theme="dark"] .navbar {
+    background: #1b1c23;
+    border-color: #30313b;
+}
+
+html[data-theme="dark"] .page-heading h2 {
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .search-box {
+    background: #252630;
+    border-color: #393a46;
+    color: #a5a6b3;
+}
+
+html[data-theme="dark"] .search-box input {
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .search-box input::placeholder {
+    color: #858693;
+}
+
+html[data-theme="dark"] .notification-btn,
+html[data-theme="dark"] .menu-toggle {
+    color: #c0c1cc;
+}
+
+html[data-theme="dark"] .navbar-profile:hover {
+    background: #292a39;
+}
+
+html[data-theme="dark"] .navbar-profile:active {
+    background: #35364b;
+}
+
+html[data-theme="dark"] .navbar-profile > svg {
+    color: #a5a6b3;
+}
+
+/* DASHBOARD TEXT */
+
+html[data-theme="dark"] .welcome-section h1,
+html[data-theme="dark"] .stat-card h2,
+html[data-theme="dark"] .upload-content h3,
+html[data-theme="dark"] .section-heading h2,
+html[data-theme="dark"] .file-name h4 {
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .welcome-date,
+html[data-theme="dark"] .welcome-description,
+html[data-theme="dark"] .stat-top,
+html[data-theme="dark"] .stat-card > p,
+html[data-theme="dark"] .upload-content p,
+html[data-theme="dark"] .section-heading p,
+html[data-theme="dark"] .file-name p,
+html[data-theme="dark"] .file-size,
+html[data-theme="dark"] .file-date,
+html[data-theme="dark"] .dashboard-footer {
+    color: #a0a1ad;
+}
+
+/* DASHBOARD CARDS */
+
+html[data-theme="dark"] .stat-card,
+html[data-theme="dark"] .upload-section,
+html[data-theme="dark"] .files-section {
+    background: #1b1c23;
+    border-color: #30313b;
+}
+
+html[data-theme="dark"] .stat-card:hover {
+    box-shadow: 0 7px 20px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="dark"] .secondary-btn {
+    background: #252630;
+    color: #dedee8;
+    border-color: #393a46;
+}
+
+html[data-theme="dark"] .secondary-btn:hover {
+    background: #30313d;
+}
+
+html[data-theme="dark"] .upload-section {
+    border-color: #444555;
+}
+
+html[data-theme="dark"] .upload-icon {
+    background: #30304e;
+    color: #aaaaff;
+}
+
+html[data-theme="dark"] .upload-action {
+    background: #30304e;
+    color: #aaaaff;
+}
+
+html[data-theme="dark"] .upload-action:hover {
+    background: #3b3b5d;
+}
+
+/* FILE TABLE */
+
+html[data-theme="dark"] .files-table-header {
+    background: #252630;
+    border-color: #383944;
+    color: #a0a1ad;
+}
+
+html[data-theme="dark"] .file-row {
+    border-color: #30313b;
+}
+
+html[data-theme="dark"] .file-row:hover {
+    background: #252630;
+}
+
+html[data-theme="dark"] .file-more {
+    color: #a5a6b3;
+}
+
+/* FAVORITES */
+
+html[data-theme="dark"] .favorite-count-badge {
+    background: #30304e;
+    color: #aaaaff;
+}
+
+html[data-theme="dark"] .sidebar-link.active .favorite-count-badge {
+    background: #6258f5;
+    color: #ffffff;
+}
+
+/* SCROLLBAR */
+
+html[data-theme="dark"] * {
+    scrollbar-color: #484956 #1b1c23;
+}
+
+/* ==========================================
+   DARK THEME - ACCOUNT PAGE
+========================================== */
+
+html[data-theme="dark"] .account-profile-card,
+html[data-theme="dark"] .account-info-card,
+html[data-theme="dark"] .account-storage-card,
+html[data-theme="dark"] .account-action-list {
+    background: #1b1c23;
+    border-color: #30313b;
+    box-shadow: none;
+}
+
+html[data-theme="dark"] .account-heading h1,
+html[data-theme="dark"] .account-profile-info h2,
+html[data-theme="dark"] .account-section-heading h2,
+html[data-theme="dark"] .account-info-card h3,
+html[data-theme="dark"] .storage-card-top h3,
+html[data-theme="dark"] .storage-numbers h2,
+html[data-theme="dark"] .account-action-left h3 {
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .account-heading p:last-child,
+html[data-theme="dark"] .account-profile-info > p,
+html[data-theme="dark"] .account-section-heading p,
+html[data-theme="dark"] .account-info-card span,
+html[data-theme="dark"] .storage-card-top p,
+html[data-theme="dark"] .storage-numbers span,
+html[data-theme="dark"] .storage-card-footer,
+html[data-theme="dark"] .account-action-left p {
+    color: #a0a1ad;
+}
+
+html[data-theme="dark"] .account-action-item {
+    border-color: #30313b;
+}
+
+html[data-theme="dark"] .edit-profile-btn,
+html[data-theme="dark"] .account-action-item > button {
+    background: #252630;
+    border-color: #41424e;
+    color: #aaaaff;
+}
+
+html[data-theme="dark"] .account-action-icon {
+    background: #30313b;
+    color: #c0c1ff;
+}
+
+html[data-theme="dark"] .account-footer {
+    color: #858693;
+}
+
+
+/* ==========================================
+   DARK THEME - SETTINGS PAGE
+========================================== */
+
+html[data-theme="dark"] .settings-section {
+    background: #1b1c23;
+    border-color: #30313b;
+}
+
+html[data-theme="dark"] .settings-heading h1,
+html[data-theme="dark"] .settings-section-heading h2,
+html[data-theme="dark"] .settings-form-group label,
+html[data-theme="dark"] .notification-global-actions > span,
+html[data-theme="dark"] .notification-category-heading h3,
+html[data-theme="dark"] .notification-option h4,
+html[data-theme="dark"] .appearance-setting-heading h3 {
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .settings-section-heading,
+html[data-theme="dark"] .settings-form-actions,
+html[data-theme="dark"] .notification-option {
+    border-color: #30313b;
+}
+
+html[data-theme="dark"] .settings-form-group input {
+    background: #252630;
+    border-color: #41424e;
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .settings-form-group input:disabled {
+    background: #20212a;
+    color: #9295a0;
+}
+
+html[data-theme="dark"] .settings-cancel-btn {
+    background: #252630;
+    border-color: #41424e;
+    color: #dedee8;
+}
+
+html[data-theme="dark"] .notification-global-actions {
+    background: #252630;
+    border-color: #41424e;
+}
+
+html[data-theme="dark"] .notification-global-actions button {
+    background: #30313b;
+    border-color: #41424e;
+    color: #dedee8;
+}
+
+html[data-theme="dark"] .notification-category-heading {
+    color: #aaaaff;
+}
+
+html[data-theme="dark"] .notification-option p,
+html[data-theme="dark"] .notification-category-heading p,
+html[data-theme="dark"] .settings-heading p,
+html[data-theme="dark"] .settings-section-heading p,
+html[data-theme="dark"] .settings-form-group small,
+html[data-theme="dark"] .appearance-setting-heading p {
+    color: #a0a1ad;
+}
+
+html[data-theme="dark"] .appearance-choice-card,
+html[data-theme="dark"] .appearance-radio-options label {
+    background: #252630;
+    border-color: #41424e;
+    color: #dedee8;
+}
+
+html[data-theme="dark"] .appearance-choice-card.active {
+    background: #30304e;
+    border-color: #7777ff;
+    color: #aaaaff;
+}
+
+html[data-theme="dark"] .appearance-radio-options label span,
+html[data-theme="dark"] .appearance-color-option small {
+    color: #c0c1cc;
+}
+
+html[data-theme="dark"] .appearance-color-option.active > span {
+    outline-color: #ffffff;
+}
+
+
+/* ==========================================
+   DARK THEME - SHARED FILE PAGE
+========================================== */
+
+html[data-theme="dark"] .shared-file-page,
+html[data-theme="dark"] .shared-file-loading {
+    background: #121318;
+}
+
+html[data-theme="dark"] .shared-file-card,
+html[data-theme="dark"] .shared-file-error-card {
+    background: #1b1c23;
+    border-color: #30313b;
+    box-shadow: none;
+}
+
+html[data-theme="dark"] .shared-file-top h1,
+html[data-theme="dark"] .shared-file-details h2,
+html[data-theme="dark"] .shared-file-error-card h2 {
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .shared-file-top p:last-child,
+html[data-theme="dark"] .shared-file-details p,
+html[data-theme="dark"] .shared-file-error-card p {
+    color: #a0a1ad;
+}
+
+html[data-theme="dark"] .shared-download-btn {
+    background: #30304e;
+    color: #aaaaff;
+}
+
+html[data-theme="dark"] .shared-security-notice {
+    background: #17352a;
+    border-color: #28563f;
+}
+
+html[data-theme="dark"] .shared-security-notice p {
+    color: #a7e4bf;
+}
+
+html[data-theme="dark"] .shared-file-footer {
+    color: #858693;
+}
+
+
+/* ==========================================
+   DARK THEME - SHARED FILES PAGE
+========================================== */
+
+html[data-theme="dark"] .shared-files-content {
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .shared-files-heading h1,
+html[data-theme="dark"] .shared-stat-card h2,
+html[data-theme="dark"] .shared-file-name h4,
+html[data-theme="dark"] .shared-empty h3 {
+    color: #f0f0f5;
+}
+
+html[data-theme="dark"] .shared-files-heading p,
+html[data-theme="dark"] .shared-stat-card p,
+html[data-theme="dark"] .shared-person strong,
+html[data-theme="dark"] .shared-person p,
+html[data-theme="dark"] .shared-date,
+html[data-theme="dark"] .shared-size,
+html[data-theme="dark"] .shared-empty p {
+    color: #a0a1ad;
+}
+
+html[data-theme="dark"] .refresh-button,
+html[data-theme="dark"] .shared-row-actions button {
+    background: #252630;
+    border-color: #41424e;
+    color: #dedee8;
+}
+
+html[data-theme="dark"] .shared-stat-card,
+html[data-theme="dark"] .shared-files-list {
+    background: #1b1c23;
+    border-color: #30313b;
+    box-shadow: none;
+}
+
+html[data-theme="dark"] .shared-files-tabs {
+    border-color: #41424e;
+}
+
+html[data-theme="dark"] .shared-files-tabs button {
+    color: #a0a1ad;
+}
+
+html[data-theme="dark"] .shared-files-tabs button.active {
+    color: #aaaaff;
+    border-bottom-color: #7777ff;
+}
+
+html[data-theme="dark"] .shared-files-tabs button span {
+    background: #30313b;
+    color: #c0c1cc;
+}
+
+html[data-theme="dark"] .shared-files-row {
+    border-color: #30313b;
+}
+
+html[data-theme="dark"] .shared-files-header {
+    background: #252630;
+    color: #a0a1ad;
+}
+
+html[data-theme="dark"] .shared-file-name p {
+    color: #9295a0;
+}
+
+html[data-theme="dark"] .shared-empty {
+    background: #1b1c23;
+}
+
+html[data-theme="dark"] .shared-loading {
+    color: #c0c1cc;
 }
