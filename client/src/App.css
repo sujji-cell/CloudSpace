@@ -1521,3 +1521,536 @@ html[data-theme="dark"] .shared-empty {
 html[data-theme="dark"] .shared-loading {
     color: #c0c1cc;
 }
+
+/* ==========================================
+   GLOBAL ACCENT COLOR SYSTEM
+========================================== */
+
+/* PRIMARY BUTTONS */
+
+.primary-btn {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.primary-btn:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+}
+
+/* BRAND ICON */
+
+.brand-icon {
+    background: var(--accent-color);
+}
+
+/* SIDEBAR ACTIVE LINK */
+
+.sidebar-link:hover {
+    background: var(--accent-soft);
+    color: var(--accent-text);
+}
+
+.sidebar-link.active {
+    background: var(--accent-light);
+    color: var(--accent-text);
+}
+
+/* STORAGE */
+
+.storage-used {
+    background: var(--accent-color);
+}
+
+.upgrade-btn {
+    color: var(--accent-text);
+}
+
+.upgrade-btn:hover {
+    background: var(--accent-light);
+}
+
+/* USER AVATARS */
+
+.user-avatar,
+.profile-avatar {
+    background: var(--accent-light);
+    color: var(--accent-text);
+}
+
+/* NAVBAR FOCUS */
+
+.navbar-profile:focus-visible {
+    outline-color: var(--accent-color);
+}
+
+/* UPLOAD SECTION */
+
+.upload-icon {
+    background: var(--accent-light);
+    color: var(--accent-color);
+}
+
+.upload-action {
+    background: var(--accent-light);
+    color: var(--accent-text);
+}
+
+.upload-action:hover {
+    background: var(--accent-border);
+}
+
+/* FILE ACTIONS */
+
+.view-all-btn {
+    color: var(--accent-text);
+}
+
+.file-more:hover {
+    color: var(--accent-color);
+}
+
+/* FAVORITE BADGE */
+
+.favorite-count-badge {
+    background: var(--accent-light);
+    color: var(--accent-text);
+}
+
+.sidebar-link.active .favorite-count-badge {
+    background: var(--accent-color);
+    color: #ffffff;
+}
+
+/* SHARED FILE FAVORITES */
+
+.shared-favorite-button.active {
+    color: var(--accent-color);
+}
+
+.shared-favorite-button:hover {
+    color: var(--accent-color);
+    background: var(--accent-light);
+}
+
+/* SETTINGS PAGE */
+
+.appearance-choice-card.active {
+    border-color: var(--accent-color);
+    color: var(--accent-text);
+}
+
+.appearance-radio-options input:checked {
+    accent-color: var(--accent-color);
+}
+
+/* GENERAL FORM CONTROLS */
+
+input,
+select,
+textarea {
+    accent-color: var(--accent-color);
+}
+
+/* ==========================================
+   DARK THEME ACCENT OVERRIDES
+========================================== */
+
+html[data-theme="dark"] .sidebar-link:hover {
+    background: color-mix(in srgb, var(--accent-color) 15%, #252630);
+    color: var(--accent-color);
+}
+
+html[data-theme="dark"] .sidebar-link.active {
+    background: color-mix(in srgb, var(--accent-color) 20%, #1b1c23);
+    color: var(--accent-color);
+}
+
+html[data-theme="dark"] .upgrade-btn {
+    color: var(--accent-color);
+}
+
+html[data-theme="dark"] .upgrade-btn:hover {
+    background: color-mix(in srgb, var(--accent-color) 15%, #252630);
+}
+
+html[data-theme="dark"] .user-avatar,
+html[data-theme="dark"] .profile-avatar {
+    background: color-mix(in srgb, var(--accent-color) 20%, #1b1c23);
+    color: var(--accent-color);
+}
+
+html[data-theme="dark"] .upload-icon,
+html[data-theme="dark"] .upload-action {
+    background: color-mix(in srgb, var(--accent-color) 20%, #1b1c23);
+    color: var(--accent-color);
+}
+
+html[data-theme="dark"] .upload-action:hover {
+    background: color-mix(in srgb, var(--accent-color) 30%, #1b1c23);
+}
+
+html[data-theme="dark"] .favorite-count-badge {
+    background: color-mix(in srgb, var(--accent-color) 20%, #1b1c23);
+    color: var(--accent-color);
+}
+
+html[data-theme="dark"] .sidebar-link.active .favorite-count-badge {
+    background: var(--accent-color);
+    color: #ffffff;
+}
+
+html[data-theme="dark"] .shared-favorite-button:hover {
+    background: color-mix(in srgb, var(--accent-color) 20%, #1b1c23);
+}
+
+/* ==========================================
+   COLLAPSED SIDEBAR
+========================================== */
+
+.sidebar {
+    transition:
+        width 0.3s ease,
+        transform 0.3s ease,
+        background 0.3s ease;
+}
+
+/* Sidebar width */
+
+html[data-sidebar="collapsed"] .sidebar {
+    width: 78px;
+}
+
+/* Main content adjustment */
+
+html[data-sidebar="collapsed"] .main-content {
+    margin-left: 78px;
+    width: calc(100% - 78px);
+}
+
+/* Sidebar header */
+
+html[data-sidebar="collapsed"] .sidebar-header {
+    padding: 0;
+    justify-content: center;
+}
+
+html[data-sidebar="collapsed"] .brand {
+    justify-content: center;
+    gap: 0;
+}
+
+html[data-sidebar="collapsed"] .brand > span {
+    display: none;
+}
+
+/* Sidebar content */
+
+html[data-sidebar="collapsed"] .sidebar-content {
+    padding: 27px 10px;
+}
+
+html[data-sidebar="collapsed"] .sidebar-label {
+    display: none;
+}
+
+/* Navigation links */
+
+html[data-sidebar="collapsed"] .sidebar-link {
+    justify-content: center;
+    gap: 0;
+    padding: 13px 8px;
+}
+
+html[data-sidebar="collapsed"] .sidebar-link > span:not(.favorite-count-badge) {
+    display: none;
+}
+
+/* Hide count badges */
+
+html[data-sidebar="collapsed"] .favorite-count-badge {
+    display: none;
+}
+
+/* Storage card */
+
+html[data-sidebar="collapsed"] .storage-card {
+    padding: 13px 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+html[data-sidebar="collapsed"] .storage-heading {
+    justify-content: center;
+}
+
+html[data-sidebar="collapsed"] .storage-heading span,
+html[data-sidebar="collapsed"] .storage-progress,
+html[data-sidebar="collapsed"] .storage-card p,
+html[data-sidebar="collapsed"] .upgrade-btn {
+    display: none;
+}
+
+/* User profile */
+
+html[data-sidebar="collapsed"] .sidebar-footer {
+    justify-content: center;
+    padding: 15px 5px;
+}
+
+html[data-sidebar="collapsed"] .user-info {
+    display: none;
+}
+
+/* Smooth transitions */
+
+html[data-sidebar="collapsed"] .sidebar-link,
+html[data-sidebar="collapsed"] .sidebar-footer {
+    transition: all 0.25s ease;
+}
+
+
+/* ==========================================
+   MOBILE SIDEBAR OVERRIDE
+========================================== */
+
+@media (max-width: 768px) {
+
+    html[data-sidebar="collapsed"] .sidebar {
+        width: min(280px, 85vw);
+    }
+
+    html[data-sidebar="collapsed"] .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    html[data-sidebar="collapsed"] .sidebar-header {
+        padding: 0 25px;
+        justify-content: space-between;
+    }
+
+    html[data-sidebar="collapsed"] .brand {
+        justify-content: flex-start;
+        gap: 11px;
+    }
+
+    html[data-sidebar="collapsed"] .brand > span {
+        display: block;
+    }
+
+    html[data-sidebar="collapsed"] .sidebar-content {
+        padding: 27px 15px;
+    }
+
+    html[data-sidebar="collapsed"] .sidebar-label {
+        display: block;
+    }
+
+    html[data-sidebar="collapsed"] .sidebar-link {
+        justify-content: flex-start;
+        gap: 13px;
+        padding: 12px;
+    }
+
+    html[data-sidebar="collapsed"] .sidebar-link > span:not(.favorite-count-badge) {
+        display: inline;
+    }
+
+    html[data-sidebar="collapsed"] .favorite-count-badge {
+        display: flex;
+    }
+
+    html[data-sidebar="collapsed"] .storage-card {
+        padding: 16px;
+        display: block;
+    }
+
+    html[data-sidebar="collapsed"] .storage-heading {
+        justify-content: flex-start;
+    }
+
+    html[data-sidebar="collapsed"] .storage-heading span,
+    html[data-sidebar="collapsed"] .storage-progress,
+    html[data-sidebar="collapsed"] .storage-card p,
+    html[data-sidebar="collapsed"] .upgrade-btn {
+        display: block;
+    }
+
+    html[data-sidebar="collapsed"] .sidebar-footer {
+        justify-content: flex-start;
+        padding: 18px;
+    }
+
+    html[data-sidebar="collapsed"] .user-info {
+        display: block;
+    }
+
+}
+
+
+
+/* ==========================================
+   GLOBAL LAYOUT DENSITY
+   Comfortable is the default layout.
+   Compact reduces spacing across the app.
+========================================== */
+
+/* Comfortable layout */
+html[data-density="comfortable"] {
+    --density-content-padding: 38px;
+    --density-card-padding: 20px;
+    --density-section-padding: 21px;
+    --density-row-padding: 13px;
+    --density-grid-gap: 18px;
+}
+
+/* Compact layout */
+html[data-density="compact"] {
+    --density-content-padding: 26px;
+    --density-card-padding: 14px;
+    --density-section-padding: 15px;
+    --density-row-padding: 8px;
+    --density-grid-gap: 12px;
+}
+
+/* Dashboard spacing */
+html[data-density="compact"] .dashboard-content {
+    padding: var(--density-content-padding);
+}
+
+html[data-density="compact"] .welcome-section {
+    margin-bottom: 20px;
+    gap: 14px;
+}
+
+html[data-density="compact"] .welcome-date {
+    margin-bottom: 8px;
+}
+
+html[data-density="compact"] .welcome-description {
+    margin-top: 6px;
+}
+
+html[data-density="compact"] .stats-grid {
+    gap: var(--density-grid-gap);
+    margin-bottom: 16px;
+}
+
+html[data-density="compact"] .stat-card {
+    padding: var(--density-card-padding);
+}
+
+html[data-density="compact"] .stat-card h2 {
+    margin-top: 11px;
+}
+
+html[data-density="compact"] .upload-section {
+    padding: 14px 17px;
+    margin-bottom: 20px;
+}
+
+html[data-density="compact"] .upload-icon {
+    width: 40px;
+    height: 40px;
+}
+
+html[data-density="compact"] .section-heading {
+    padding: var(--density-section-padding);
+}
+
+html[data-density="compact"] .files-table-header,
+html[data-density="compact"] .file-row {
+    padding: var(--density-row-padding) 16px;
+    gap: 10px;
+}
+
+html[data-density="compact"] .file-row {
+    min-height: 54px;
+}
+
+html[data-density="compact"] .file-icon {
+    width: 32px;
+    height: 32px;
+}
+
+html[data-density="compact"] .file-name {
+    gap: 9px;
+}
+
+/* Sidebar and top navigation */
+html[data-density="compact"] .sidebar-header {
+    height: 66px;
+}
+
+html[data-density="compact"] .sidebar-content {
+    padding-top: 18px;
+    padding-bottom: 18px;
+}
+
+html[data-density="compact"] .sidebar-menu {
+    gap: 3px;
+}
+
+html[data-density="compact"] .sidebar-link {
+    padding-top: 9px;
+    padding-bottom: 9px;
+}
+
+html[data-density="compact"] .storage-card {
+    padding: 12px;
+    margin: 13px 0;
+}
+
+html[data-density="compact"] .sidebar-footer {
+    padding-top: 13px;
+    padding-bottom: 13px;
+}
+
+html[data-density="compact"] .navbar {
+    height: 68px;
+}
+
+/* Account and settings sections */
+html[data-density="compact"] .account-profile-card,
+html[data-density="compact"] .account-info-card,
+html[data-density="compact"] .account-storage-card,
+html[data-density="compact"] .account-action-list,
+html[data-density="compact"] .settings-section {
+    padding: 16px;
+}
+
+/* Shared-file pages */
+html[data-density="compact"] .shared-file-card,
+html[data-density="compact"] .shared-file-error-card {
+    padding: 20px;
+}
+
+html[data-density="compact"] .shared-stat-card {
+    padding: 14px;
+}
+
+html[data-density="compact"] .shared-files-row {
+    padding-top: 9px;
+    padding-bottom: 9px;
+}
+
+/* Keep mobile spacing comfortable enough to avoid cramped controls */
+@media (max-width: 768px) {
+    html[data-density="compact"] .dashboard-content {
+        padding: 20px 14px;
+    }
+
+    html[data-density="compact"] .stat-card {
+        padding: 13px;
+    }
+
+    html[data-density="compact"] .upload-section {
+        padding: 14px;
+    }
+
+    html[data-density="compact"] .section-heading {
+        padding: 13px;
+    }
+}

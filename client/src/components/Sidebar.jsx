@@ -27,7 +27,11 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const { user, setUser } = useAuth();
+    const {
+        user,
+        setUser,
+        sidebar
+    } = useAuth();
 
     const [storageUsed, setStorageUsed] = useState(0);
     const [favoriteCount, setFavoriteCount] = useState(0);
@@ -282,7 +286,12 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
                 />
             )}
 
-            <aside className={`sidebar ${isOpen ? "sidebar-open" : ""}`}>
+            <aside
+                className={`sidebar
+                    ${isOpen ? "sidebar-open" : ""}
+                    ${sidebar === "collapsed" ? "sidebar-collapsed" : ""}
+                `}
+            >
 
                 {/* SIDEBAR HEADER */}
 
@@ -330,11 +339,17 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                                 <button
                                     key={item.title}
-                                    className={`sidebar-link ${currentActiveItem === item.title
-                                        ? "active"
-                                        : ""
-                                        }`}
+                                    className={`sidebar-link ${
+                                        currentActiveItem === item.title
+                                            ? "active"
+                                            : ""
+                                    }`}
                                     onClick={() => handleNavigation(item)}
+                                    title={
+                                        sidebar === "collapsed"
+                                            ? item.title
+                                            : undefined
+                                    }
                                 >
 
                                     <Icon
@@ -384,7 +399,14 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                         {/* STORAGE CARD */}
 
-                        <div className="storage-card">
+                        <div
+                            className="storage-card"
+                            title={
+                                sidebar === "collapsed"
+                                    ? `${formatSize(storageUsed)} used`
+                                    : undefined
+                            }
+                        >
 
                             <div className="storage-heading">
 
@@ -423,15 +445,21 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
                         {/* SETTINGS */}
 
                         <button
-                            className={`sidebar-link settings-link ${currentActiveItem === "Settings"
-                                ? "active"
-                                : ""
-                                }`}
+                            className={`sidebar-link settings-link ${
+                                currentActiveItem === "Settings"
+                                    ? "active"
+                                    : ""
+                            }`}
                             onClick={() => {
                                 setActiveItem?.("Settings");
                                 navigate("/settings");
                                 onClose?.();
                             }}
+                            title={
+                                sidebar === "collapsed"
+                                    ? "Settings"
+                                    : undefined
+                            }
                         >
 
                             <Settings size={19} />
@@ -446,6 +474,11 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
                         <button
                             className="sidebar-link"
                             onClick={handleLogout}
+                            title={
+                                sidebar === "collapsed"
+                                    ? "Sign out"
+                                    : undefined
+                            }
                         >
 
                             <LogOut size={19} />
@@ -470,16 +503,26 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
                         onClose?.();
                     }}
                     onKeyDown={(event) => {
+
                         if (
                             event.key === "Enter" ||
                             event.key === " "
                         ) {
+
                             event.preventDefault();
+
                             navigate("/account");
+
                             onClose?.();
+
                         }
+
                     }}
-                    title="View Account"
+                    title={
+                        sidebar === "collapsed"
+                            ? `${fullName} - View Account`
+                            : "View Account"
+                    }
                 >
 
                     <div className="user-avatar">

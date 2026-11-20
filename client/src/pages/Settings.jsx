@@ -48,7 +48,14 @@ const defaultAppearancePreferences = {
 
 function Settings() {
 
-    const { user, setUser, setTheme } = useAuth();
+    const {
+        user,
+        setUser,
+        setTheme,
+        setAccentColor,
+        setSidebar,
+        setDensity
+    } = useAuth();
 
 
     // ==========================================
@@ -561,8 +568,17 @@ function Settings() {
 
             setAppearancePreferences(savedPreferences);
 
-            // Apply the selected theme globally
+            // Apply selected theme globally
             setTheme(savedPreferences.theme);
+
+            // Apply selected accent color globally
+            setAccentColor(savedPreferences.accentColor);
+
+            // Apply selected sidebar layout globally
+            setSidebar(savedPreferences.sidebar);
+
+            // Apply selected layout density globally
+            setDensity(savedPreferences.density);
 
             setAppearanceMessage(
                 response.data.message ||

@@ -16,8 +16,14 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Appearance state
+    // Appearance states
     const [theme, setTheme] = useState("light");
+    const [accentColor, setAccentColor] = useState("blue");
+
+    // Sidebar and layout states
+    const [sidebar, setSidebar] = useState("expanded");
+    const [density, setDensity] = useState("comfortable");
+
 
     // Check whether user is already logged in
     const checkAuth = async () => {
@@ -39,12 +45,14 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+
     // Check authentication when application loads
     useEffect(() => {
 
         checkAuth();
 
     }, []);
+
 
     // Load saved appearance preferences
     useEffect(() => {
@@ -54,6 +62,10 @@ export const AuthProvider = ({ children }) => {
             if (!user) {
 
                 setTheme("light");
+                setAccentColor("blue");
+                setSidebar("expanded");
+                setDensity("comfortable");
+
                 return;
 
             }
@@ -64,8 +76,26 @@ export const AuthProvider = ({ children }) => {
                     "/auth/appearance-preferences"
                 );
 
+                const preferences = response.data.preferences;
+
+                // Theme
                 setTheme(
-                    response.data.preferences?.theme || "light"
+                    preferences?.theme || "light"
+                );
+
+                // Accent Color
+                setAccentColor(
+                    preferences?.accentColor || "blue"
+                );
+
+                // Sidebar
+                setSidebar(
+                    preferences?.sidebar || "expanded"
+                );
+
+                // Layout Density
+                setDensity(
+                    preferences?.density || "comfortable"
                 );
 
             } catch (error) {
@@ -76,6 +106,9 @@ export const AuthProvider = ({ children }) => {
                 );
 
                 setTheme("light");
+                setAccentColor("blue");
+                setSidebar("expanded");
+                setDensity("comfortable");
 
             }
 
@@ -84,6 +117,7 @@ export const AuthProvider = ({ children }) => {
         fetchAppearance();
 
     }, [user]);
+
 
     // Apply theme globally
     useEffect(() => {
@@ -134,6 +168,37 @@ export const AuthProvider = ({ children }) => {
 
     }, [theme]);
 
+
+    // Apply accent color globally
+    useEffect(() => {
+
+        const root = document.documentElement;
+
+        root.setAttribute("data-accent", accentColor);
+
+    }, [accentColor]);
+
+
+    // Apply sidebar preference globally
+    useEffect(() => {
+
+        const root = document.documentElement;
+
+        root.setAttribute("data-sidebar", sidebar);
+
+    }, [sidebar]);
+
+
+    // Apply layout density globally
+    useEffect(() => {
+
+        const root = document.documentElement;
+
+        root.setAttribute("data-density", density);
+
+    }, [density]);
+
+
     return (
 
         <AuthContext.Provider
@@ -142,8 +207,22 @@ export const AuthProvider = ({ children }) => {
                 setUser,
                 loading,
                 checkAuth,
+
+                // Theme
                 theme,
-                setTheme
+                setTheme,
+
+                // Accent Color
+                accentColor,
+                setAccentColor,
+
+                // Sidebar
+                sidebar,
+                setSidebar,
+
+                // Layout Density
+                density,
+                setDensity
             }}
         >
 
@@ -153,6 +232,7 @@ export const AuthProvider = ({ children }) => {
 
     );
 };
+
 
 // Custom hook to access authentication
 export const useAuth = () => {
