@@ -16,6 +16,7 @@ import SharedFile from "./pages/SharedFile";
 import SharedFiles from "./pages/SharedFiles";
 import RecentFiles from "./pages/RecentFiles";
 import Favorites from "./pages/Favorites";
+import RecycleBin from "./pages/RecycleBin";
 
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -75,6 +76,11 @@ function App() {
                         <Route
                             path="/favorites"
                             element={<Favorites />}
+                        />
+
+                        <Route
+                            path="/recycle-bin"
+                            element={<RecycleBin />}
                         />
 
                         <Route

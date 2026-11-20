@@ -33,6 +33,16 @@ export const getFileAccessUrl = async (req, res) => {
 
         }
 
+        // Block access to deleted files
+        if (file.isDeleted) {
+
+            return res.status(410).json({
+                success: false,
+                message: "This file is in the Recycle Bin and cannot be accessed."
+            });
+
+        }
+
         // Check ownership
         const isOwner =
             file.owner.toString() === userId.toString();

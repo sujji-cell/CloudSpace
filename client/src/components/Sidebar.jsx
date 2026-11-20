@@ -15,7 +15,8 @@ import {
     Cloud,
     LogOut,
     HardDrive,
-    X
+    X,
+    Trash2
 } from "lucide-react";
 
 import api from "../api/axios";
@@ -30,17 +31,18 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
     const [storageUsed, setStorageUsed] = useState(0);
     const [favoriteCount, setFavoriteCount] = useState(0);
+    const [recycleBinCount, setRecycleBinCount] = useState(0);
 
-    // --------------------------------
+
     // SIDEBAR MENU ITEMS
-    // --------------------------------
 
     const menuItems = [
         { title: "Dashboard", icon: LayoutDashboard, path: "/" },
         { title: "My Files", icon: FolderOpen, path: "/my-files" },
         { title: "Shared Files", icon: Share2, path: "/shared-files" },
         { title: "Recent", icon: Clock3, path: "/recent-files" },
-        { title: "Favourites", icon: Star, path: "/favorites" }
+        { title: "Favourites", icon: Star, path: "/favorites" },
+        { title: "Recycle Bin", icon: Trash2, path: "/recycle-bin" }
     ];
 
     const currentActiveItem =
@@ -49,9 +51,7 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
         "";
 
 
-    // --------------------------------
     // FETCH STORAGE INFORMATION
-    // --------------------------------
 
     const fetchStorage = async () => {
 
@@ -98,9 +98,7 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
     }, []);
 
 
-    // --------------------------------
     // FETCH FAVOURITE COUNT
-    // --------------------------------
 
     const fetchFavoriteCount = async () => {
 
@@ -145,9 +143,52 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
     }, []);
 
 
-    // --------------------------------
+    // FETCH RECYCLE BIN COUNT
+
+    const fetchRecycleBinCount = async () => {
+
+        try {
+
+            const response = await api.get("/recycle-bin");
+
+            setRecycleBinCount(
+                (response.data.files || []).length
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Unable to fetch Recycle Bin count:",
+                error
+            );
+
+        }
+
+    };
+
+
+    useEffect(() => {
+
+        fetchRecycleBinCount();
+
+        window.addEventListener(
+            "cloudspace-recycle-bin-updated",
+            fetchRecycleBinCount
+        );
+
+        return () => {
+
+            window.removeEventListener(
+                "cloudspace-recycle-bin-updated",
+                fetchRecycleBinCount
+            );
+
+        };
+
+    }, []);
+
+
     // FORMAT STORAGE SIZE
-    // --------------------------------
 
     const formatSize = (bytes) => {
 
@@ -166,9 +207,7 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
     };
 
 
-    // --------------------------------
     // USER INFORMATION
-    // --------------------------------
 
     const fullName = [
         user?.firstName,
@@ -192,9 +231,7 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
     );
 
 
-    // --------------------------------
     // NAVIGATION
-    // --------------------------------
 
     const handleNavigation = (item) => {
 
@@ -209,9 +246,7 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
     };
 
 
-    // --------------------------------
     // LOGOUT
-    // --------------------------------
 
     const handleLogout = async () => {
 
@@ -234,9 +269,7 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
     };
 
 
-    // --------------------------------
     // SIDEBAR UI
-    // --------------------------------
 
     return (
 
@@ -312,6 +345,7 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                                     <span>{item.title}</span>
 
+
                                     {/* FAVOURITE COUNT BADGE */}
 
                                     {item.title === "Favourites" &&
@@ -319,6 +353,18 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                                             <span className="favorite-count-badge">
                                                 {favoriteCount}
+                                            </span>
+
+                                        )}
+
+
+                                    {/* RECYCLE BIN COUNT BADGE */}
+
+                                    {item.title === "Recycle Bin" &&
+                                        recycleBinCount > 0 && (
+
+                                            <span className="favorite-count-badge">
+                                                {recycleBinCount}
                                             </span>
 
                                         )}

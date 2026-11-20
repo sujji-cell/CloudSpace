@@ -60,7 +60,6 @@ const fileSchema = new mongoose.Schema(
         },
 
         // Folder containing this file
-        // Null means the file is in the root directory
         folder: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Folder",
@@ -69,6 +68,18 @@ const fileSchema = new mongoose.Schema(
 
         // Last time the file was accessed
         lastAccessedAt: {
+            type: Date,
+            default: null
+        },
+
+        // Recycle Bin status
+        isDeleted: {
+            type: Boolean,
+            default: false
+        },
+
+        // Date when the file was moved to Recycle Bin
+        deletedAt: {
             type: Date,
             default: null
         }

@@ -942,6 +942,10 @@ function MyFiles() {
                 new Event("cloudspace-favorites-updated")
             );
 
+            window.dispatchEvent(
+                new Event("cloudspace-recycle-bin-updated")
+            );
+
             setDeleteFileId(null);
 
         } catch (error) {

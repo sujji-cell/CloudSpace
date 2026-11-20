@@ -1213,3 +1213,22 @@
 .move-file-modal .share-file-info {
     margin: 18px 0;
 }
+
+/* RECYCLE BIN NOTICE */
+
+.recycle-bin-notice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    margin: 20px 0;
+    border-radius: 10px;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: #b7791f;
+}
+
+.recycle-bin-notice p {
+    margin: 0;
+    font-size: 13px;
+}

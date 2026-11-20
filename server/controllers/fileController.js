@@ -7,17 +7,14 @@ import User from "../models/User.js";
 import Share from "../models/Share.js";
 import Folder from "../models/Folder.js";
 
-
 // ============================================
 // 1. UPLOAD FILE
 // ============================================
 
 export const uploadFile = async (req, res) => {
-
     let uploadedAsset = null;
 
     try {
-
         if (!req.file) {
             return res.status(400).json({
                 success: false,
@@ -41,7 +38,6 @@ export const uploadFile = async (req, res) => {
         let selectedFolder = null;
 
         if (folderId) {
-
             if (!mongoose.Types.ObjectId.isValid(folderId)) {
                 return res.status(400).json({
                     success: false,
@@ -72,7 +68,6 @@ export const uploadFile = async (req, res) => {
 
         // Upload to Cloudinary
         const cloudinaryResult = await new Promise((resolve, reject) => {
-
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
                     folder: `cloudspace/${userId}`,
@@ -82,25 +77,21 @@ export const uploadFile = async (req, res) => {
                     unique_filename: true
                 },
                 (error, result) => {
-
                     if (error) {
                         reject(error);
                     } else {
                         resolve(result);
                     }
-
                 }
             );
 
             Readable.from([file.buffer]).pipe(uploadStream);
-
         });
 
         uploadedAsset = cloudinaryResult;
 
         // Save file information
         const newFile = await File.create({
-
             originalName: file.originalname,
             fileUrl: cloudinaryResult.secure_url,
             cloudinaryId: cloudinaryResult.public_id,
@@ -111,29 +102,22 @@ export const uploadFile = async (req, res) => {
             format: cloudinaryResult.format || "",
             owner: userId,
             folder: selectedFolder ? selectedFolder._id : null
-
         });
 
         // Update storage usage
         user.storageUsed += file.size;
-
         await user.save();
 
         return res.status(201).json({
-
             success: true,
             message: "File uploaded successfully!",
             file: newFile
-
         });
 
     } catch (error) {
-
         // Cleanup Cloudinary if database operation fails
         if (uploadedAsset) {
-
             try {
-
                 await cloudinary.uploader.destroy(
                     uploadedAsset.public_id,
                     {
@@ -141,13 +125,9 @@ export const uploadFile = async (req, res) => {
                         type: uploadedAsset.type || "authenticated"
                     }
                 );
-
             } catch (cleanupError) {
-
                 console.error("Cloudinary cleanup failed:", cleanupError);
-
             }
-
         }
 
         console.error("File Upload Error:", error);
@@ -156,9 +136,7 @@ export const uploadFile = async (req, res) => {
             success: false,
             message: "File upload failed."
         });
-
     }
-
 };
 
 
@@ -167,19 +145,18 @@ export const uploadFile = async (req, res) => {
 // ============================================
 
 export const getUserFiles = async (req, res) => {
-
     try {
-
         const userId = req.userId;
         const { folderId, root } = req.query;
 
+        // Exclude files in Recycle Bin
         const filter = {
-            owner: userId
+            owner: userId,
+            isDeleted: { $ne: true }
         };
 
         // Files inside a specific folder
         if (folderId) {
-
             if (!mongoose.Types.ObjectId.isValid(folderId)) {
                 return res.status(400).json({
                     success: false,
@@ -211,24 +188,19 @@ export const getUserFiles = async (req, res) => {
             .sort({ createdAt: -1 });
 
         return res.status(200).json({
-
             success: true,
             count: files.length,
             files
-
         });
 
     } catch (error) {
-
         console.error("Fetch Files Error:", error);
 
         return res.status(500).json({
             success: false,
             message: "Unable to fetch files."
         });
-
     }
-
 };
 
 
@@ -237,50 +209,42 @@ export const getUserFiles = async (req, res) => {
 // ============================================
 
 export const moveFile = async (req, res) => {
-
     try {
-
         const userId = req.userId;
         const { fileId } = req.params;
         const { folderId } = req.body;
 
         // Validate file ID
         if (!mongoose.Types.ObjectId.isValid(fileId)) {
-
             return res.status(400).json({
                 success: false,
                 message: "Invalid file ID."
             });
-
         }
 
-        // Find file belonging to logged-in user
+        // Find active file belonging to logged-in user
         const file = await File.findOne({
             _id: fileId,
-            owner: userId
+            owner: userId,
+            isDeleted: { $ne: true }
         });
 
         if (!file) {
-
             return res.status(404).json({
                 success: false,
                 message: "File not found."
             });
-
         }
 
         let selectedFolder = null;
 
-        // If folderId is provided, validate destination folder
+        // Validate destination folder
         if (folderId) {
-
             if (!mongoose.Types.ObjectId.isValid(folderId)) {
-
                 return res.status(400).json({
                     success: false,
                     message: "Invalid destination folder ID."
                 });
-
             }
 
             selectedFolder = await Folder.findOne({
@@ -289,14 +253,11 @@ export const moveFile = async (req, res) => {
             });
 
             if (!selectedFolder) {
-
                 return res.status(404).json({
                     success: false,
                     message: "Destination folder not found."
                 });
-
             }
-
         }
 
         // Prevent unnecessary move
@@ -309,12 +270,10 @@ export const moveFile = async (req, res) => {
             : null;
 
         if (currentFolderId === destinationFolderId) {
-
             return res.status(400).json({
                 success: false,
                 message: "File is already in this location."
             });
-
         }
 
         // Move file
@@ -325,141 +284,73 @@ export const moveFile = async (req, res) => {
         await file.save();
 
         return res.status(200).json({
-
             success: true,
-
             message: selectedFolder
                 ? "File moved to folder successfully!"
                 : "File moved to My Files successfully!",
-
             file
-
         });
 
     } catch (error) {
-
         console.error("Move File Error:", error);
 
         return res.status(500).json({
             success: false,
             message: "Unable to move file."
         });
-
     }
-
 };
 
 
 // ============================================
-// 4. DELETE FILE
+// 4. SOFT DELETE FILE
 // ============================================
 
 export const deleteFile = async (req, res) => {
-
     try {
-
         const userId = req.userId;
         const { fileId } = req.params;
 
         // Validate MongoDB ID
         if (!mongoose.Types.ObjectId.isValid(fileId)) {
-
             return res.status(400).json({
                 success: false,
                 message: "Invalid file ID."
             });
-
         }
 
-        // Find file belonging to logged-in user
+        // Find active file belonging to logged-in user
         const file = await File.findOne({
             _id: fileId,
-            owner: userId
+            owner: userId,
+            isDeleted: { $ne: true }
         });
 
         if (!file) {
-
             return res.status(404).json({
                 success: false,
                 message: "File not found."
             });
-
         }
 
-        // Determine Cloudinary resource type
-        let resourceType = file.resourceType;
+        // Move file to Recycle Bin
+        file.isDeleted = true;
+        file.deletedAt = new Date();
 
-        const resourceMatch = file.fileUrl.match(
-            /\/(image|video|raw)\/(upload|authenticated)\//
-        );
-
-        if (resourceMatch) {
-
-            resourceType = resourceMatch[1];
-
-        } else if (!resourceType) {
-
-            resourceType = file.mimeType.startsWith("video/")
-                ? "video"
-                : file.mimeType.startsWith("image/")
-                    ? "image"
-                    : "raw";
-
-        }
-
-        // Determine delivery type
-        const deliveryType = file.deliveryType || "upload";
-
-        // Delete actual file from Cloudinary
-        const cloudinaryResult = await cloudinary.uploader.destroy(
-            file.cloudinaryId,
-            {
-                resource_type: resourceType,
-                type: deliveryType
-            }
-        );
-
-        // Check Cloudinary response
-        if (
-            cloudinaryResult.result !== "ok" &&
-            cloudinaryResult.result !== "not found"
-        ) {
-
-            return res.status(500).json({
-                success: false,
-                message: "Unable to delete file from cloud storage."
-            });
-
-        }
-
-        // Remove sharing records
-        await Share.deleteMany({
-            file: file._id
-        });
-
-        // Delete file record
-        await file.deleteOne();
-
-        // Decrease storage usage
-        await User.updateOne(
-            { _id: userId },
-            { $inc: { storageUsed: -file.size } }
-        );
+        await file.save();
 
         return res.status(200).json({
             success: true,
-            message: "File deleted successfully!"
+            message: "File moved to Recycle Bin successfully!",
+            file
         });
 
     } catch (error) {
-
-        console.error("Delete File Error:", error);
+        console.error("Soft Delete File Error:", error);
 
         return res.status(500).json({
             success: false,
-            message: "Unable to delete file."
+            message: "Unable to move file to Recycle Bin."
         });
-
     }
-
 };
