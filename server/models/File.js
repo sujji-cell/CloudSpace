@@ -59,6 +59,14 @@ const fileSchema = new mongoose.Schema(
             required: true
         },
 
+        // Folder containing this file
+        // Null means the file is in the root directory
+        folder: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Folder",
+            default: null
+        },
+
         // Last time the file was accessed
         lastAccessedAt: {
             type: Date,

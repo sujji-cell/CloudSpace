@@ -725,3 +725,491 @@
     font-size: 12px;
     line-height: 1.5;
 }
+
+
+/* =========================================
+   FOLDER MANAGEMENT
+========================================= */
+
+.myfiles-heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.create-folder-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 17px;
+    border: none;
+    border-radius: 8px;
+    background: #5555ef;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.create-folder-btn:hover {
+    background: #4141d9;
+}
+
+
+/* Folder Navigation */
+
+.folder-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+}
+
+.folder-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #9299aa;
+    font-size: 13px;
+}
+
+.folder-breadcrumb button {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border: none;
+    background: transparent;
+    color: #687184;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.folder-breadcrumb button:hover,
+.folder-breadcrumb button.breadcrumb-active {
+    color: #5555ef;
+}
+
+.breadcrumb-current {
+    color: #172033;
+    font-weight: 600;
+}
+
+.back-folder-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 13px;
+    border: 1px solid #e3e6ef;
+    background: white;
+    color: #5555ef;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+
+/* Folders Section */
+
+.folders-section {
+    background: white;
+    border: 1px solid #e7e9ef;
+    border-radius: 11px;
+    padding: 22px;
+    margin-bottom: 25px;
+}
+
+.folders-section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.folders-section-heading h2 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #172033;
+    font-size: 16px;
+    margin-bottom: 6px;
+}
+
+.folders-section-heading h2 svg {
+    color: #5555ef;
+}
+
+.folders-section-heading p {
+    font-size: 12px;
+    color: #9299aa;
+}
+
+.folder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.folder-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-width: 0;
+    padding: 15px;
+    border: 1px solid #e7e9ef;
+    border-radius: 10px;
+    background: #ffffff;
+    transition: 0.2s;
+}
+
+.folder-card:hover {
+    border-color: #b9b9ff;
+    background: #fafaff;
+    box-shadow: 0 4px 14px rgba(85, 85, 239, 0.07);
+}
+
+.folder-card-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.folder-card-icon {
+    width: 43px;
+    height: 43px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0efff;
+    color: #5555ef;
+    border-radius: 10px;
+}
+
+.folder-card-info {
+    min-width: 0;
+}
+
+.folder-card-info h3 {
+    color: #172033;
+    font-size: 13px;
+    margin-bottom: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.folder-card-info p {
+    color: #9299aa;
+    font-size: 11px;
+}
+
+.folder-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.folder-card-actions button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #858da0;
+    cursor: pointer;
+}
+
+.folder-card-actions button:hover {
+    background: #f0efff;
+    color: #5555ef;
+}
+
+.folder-card-actions .folder-delete-btn:hover {
+    background: #fff0f0;
+    color: #e05252;
+}
+
+.folder-empty-message {
+    padding: 25px 10px;
+    text-align: center;
+    color: #9299aa;
+    font-size: 13px;
+}
+
+
+/* Folder Modal */
+
+.folder-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.folder-modal {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    padding: 30px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    text-align: center;
+}
+
+.folder-modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    border: none;
+    background: transparent;
+    color: #9299aa;
+    cursor: pointer;
+}
+
+.folder-modal-close:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.folder-modal-icon {
+    width: 55px;
+    height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 17px;
+    border-radius: 14px;
+    background: #f0efff;
+    color: #5555ef;
+}
+
+.folder-warning-icon {
+    background: #fff0f0;
+    color: #e05252;
+}
+
+.folder-modal h2 {
+    color: #172033;
+    font-size: 20px;
+    margin-bottom: 9px;
+}
+
+.folder-modal > p {
+    color: #8790a3;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 22px;
+}
+
+.folder-modal form {
+    text-align: left;
+}
+
+.folder-modal form label {
+    display: block;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 9px;
+}
+
+.folder-modal form input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 13px;
+    border: 1px solid #dce1eb;
+    border-radius: 8px;
+    outline: none;
+    color: #172033;
+    font-size: 13px;
+}
+
+.folder-modal form input:focus {
+    border-color: #5555ef;
+    box-shadow: 0 0 0 3px rgba(85, 85, 239, 0.1);
+}
+
+.folder-error {
+    margin-top: 10px;
+    color: #dc2626;
+    font-size: 12px;
+    text-align: left;
+}
+
+.folder-modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 23px;
+}
+
+.folder-modal-actions button {
+    flex: 1;
+    padding: 11px;
+    border: 1px solid #e3e6ef;
+    border-radius: 8px;
+    background: white;
+    color: #687184;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.folder-modal-actions button:last-child {
+    border-color: #5555ef;
+    background: #5555ef;
+    color: white;
+}
+
+.folder-modal-actions button.folder-confirm-delete {
+    border-color: #e05252;
+    background: #e05252;
+    color: white;
+}
+
+.folder-modal-actions button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+
+/* Responsive */
+
+@media (max-width: 768px) {
+
+    .myfiles-heading-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .folder-navigation {
+        align-items: flex-start;
+        gap: 12px;
+        flex-direction: column;
+    }
+
+    .folder-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 480px) {
+
+    .myfiles-heading-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .create-folder-btn,
+    .myfiles-refresh {
+        justify-content: center;
+    }
+
+    .folder-modal {
+        padding: 25px 20px;
+    }
+
+}
+
+
+.folder-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.folder-breadcrumb button.breadcrumb-active {
+    color: #5555ef;
+    font-weight: 600;
+}
+
+/* Upload button */
+.upload-files-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 11px 18px;
+    border: none;
+    border-radius: 9px;
+    background: #5752f5;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.upload-files-btn:hover {
+    background: #4540df;
+    transform: translateY(-1px);
+}
+
+.upload-files-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Header button layout */
+.myfiles-heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Upload error */
+.upload-error-message {
+    color: #dc2626;
+    font-size: 13px;
+    margin: 10px 0;
+}
+
+/* Move File Modal */
+
+.move-file-modal {
+    max-width: 460px;
+}
+
+.move-file-modal label {
+    display: block;
+    margin: 18px 0 8px;
+    font-weight: 600;
+}
+
+.move-folder-select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #dce1e8;
+    border-radius: 8px;
+    background: white;
+    font-size: 14px;
+    outline: none;
+}
+
+.move-folder-select:focus {
+    border-color: #6366f1;
+}
+
+.move-file-modal .share-file-info {
+    margin: 18px 0;
+}

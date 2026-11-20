@@ -8,6 +8,8 @@ import authRoutes from "./routes/authRoutes.js";
 import fileRoutes from "./routes/fileRoutes.js";
 import shareRoutes from "./routes/shareRoutes.js";
 import favoriteRoutes from "./routes/favoriteRoutes.js";
+import folderRoutes from "./routes/folderRoutes.js";
+
 dotenv.config();
 
 const app = express();
@@ -38,6 +40,9 @@ app.use("/api/shares", shareRoutes);
 
 // Favorite Files
 app.use("/api/favorites", favoriteRoutes);
+
+// Folder Management
+app.use("/api/folders", folderRoutes);
 
 // Start Server
 

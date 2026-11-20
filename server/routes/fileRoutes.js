@@ -3,7 +3,8 @@ import express from "express";
 import {
     uploadFile,
     getUserFiles,
-    deleteFile
+    deleteFile,
+    moveFile
 } from "../controllers/fileController.js";
 
 import {
@@ -23,14 +24,21 @@ router.post(
     uploadFile
 );
 
-// Get files belonging to the logged-in user
+// Get user's files
 router.get(
     "/",
     authMiddleware,
     getUserFiles
 );
 
-// Get secure access URL for a file
+// Move a file
+router.put(
+    "/:fileId/move",
+    authMiddleware,
+    moveFile
+);
+
+// Get authorized file access URL
 router.get(
     "/:fileId/access",
     authMiddleware,

@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import File from "../models/File.js";
 import User from "../models/User.js";
 import Share from "../models/Share.js";
+import Folder from "../models/Folder.js";
 
 
 // ============================================
@@ -26,6 +27,7 @@ export const uploadFile = async (req, res) => {
 
         const userId = req.userId;
         const file = req.file;
+        const { folderId } = req.body;
 
         const user = await User.findById(userId);
 
@@ -36,6 +38,30 @@ export const uploadFile = async (req, res) => {
             });
         }
 
+        let selectedFolder = null;
+
+        if (folderId) {
+
+            if (!mongoose.Types.ObjectId.isValid(folderId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid folder ID."
+                });
+            }
+
+            selectedFolder = await Folder.findOne({
+                _id: folderId,
+                owner: userId
+            });
+
+            if (!selectedFolder) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Folder not found."
+                });
+            }
+        }
+
         // Check storage limit
         if (user.storageUsed + file.size > user.storageLimit) {
             return res.status(400).json({
@@ -44,7 +70,7 @@ export const uploadFile = async (req, res) => {
             });
         }
 
-        // Upload to Cloudinary using authenticated delivery
+        // Upload to Cloudinary
         const cloudinaryResult = await new Promise((resolve, reject) => {
 
             const uploadStream = cloudinary.uploader.upload_stream(
@@ -72,26 +98,19 @@ export const uploadFile = async (req, res) => {
 
         uploadedAsset = cloudinaryResult;
 
-        // Save file information in MongoDB
+        // Save file information
         const newFile = await File.create({
 
             originalName: file.originalname,
-
             fileUrl: cloudinaryResult.secure_url,
-
             cloudinaryId: cloudinaryResult.public_id,
-
             resourceType: cloudinaryResult.resource_type,
-
             deliveryType: cloudinaryResult.type || "authenticated",
-
             size: file.size,
-
             mimeType: file.mimetype,
-
             format: cloudinaryResult.format || "",
-
-            owner: userId
+            owner: userId,
+            folder: selectedFolder ? selectedFolder._id : null
 
         });
 
@@ -103,9 +122,7 @@ export const uploadFile = async (req, res) => {
         return res.status(201).json({
 
             success: true,
-
             message: "File uploaded successfully!",
-
             file: newFile
 
         });
@@ -136,11 +153,8 @@ export const uploadFile = async (req, res) => {
         console.error("File Upload Error:", error);
 
         return res.status(500).json({
-
             success: false,
-
             message: "File upload failed."
-
         });
 
     }
@@ -157,16 +171,49 @@ export const getUserFiles = async (req, res) => {
     try {
 
         const userId = req.userId;
+        const { folderId, root } = req.query;
 
-        const files = await File.find({ owner: userId })
+        const filter = {
+            owner: userId
+        };
+
+        // Files inside a specific folder
+        if (folderId) {
+
+            if (!mongoose.Types.ObjectId.isValid(folderId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid folder ID."
+                });
+            }
+
+            const folder = await Folder.findOne({
+                _id: folderId,
+                owner: userId
+            });
+
+            if (!folder) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Folder not found."
+                });
+            }
+
+            filter.folder = folderId;
+        }
+
+        // Files in root directory
+        else if (root === "true") {
+            filter.folder = null;
+        }
+
+        const files = await File.find(filter)
             .sort({ createdAt: -1 });
 
         return res.status(200).json({
 
             success: true,
-
             count: files.length,
-
             files
 
         });
@@ -176,11 +223,8 @@ export const getUserFiles = async (req, res) => {
         console.error("Fetch Files Error:", error);
 
         return res.status(500).json({
-
             success: false,
-
             message: "Unable to fetch files."
-
         });
 
     }
@@ -189,7 +233,125 @@ export const getUserFiles = async (req, res) => {
 
 
 // ============================================
-// 3. DELETE FILE
+// 3. MOVE FILE
+// ============================================
+
+export const moveFile = async (req, res) => {
+
+    try {
+
+        const userId = req.userId;
+        const { fileId } = req.params;
+        const { folderId } = req.body;
+
+        // Validate file ID
+        if (!mongoose.Types.ObjectId.isValid(fileId)) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Invalid file ID."
+            });
+
+        }
+
+        // Find file belonging to logged-in user
+        const file = await File.findOne({
+            _id: fileId,
+            owner: userId
+        });
+
+        if (!file) {
+
+            return res.status(404).json({
+                success: false,
+                message: "File not found."
+            });
+
+        }
+
+        let selectedFolder = null;
+
+        // If folderId is provided, validate destination folder
+        if (folderId) {
+
+            if (!mongoose.Types.ObjectId.isValid(folderId)) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid destination folder ID."
+                });
+
+            }
+
+            selectedFolder = await Folder.findOne({
+                _id: folderId,
+                owner: userId
+            });
+
+            if (!selectedFolder) {
+
+                return res.status(404).json({
+                    success: false,
+                    message: "Destination folder not found."
+                });
+
+            }
+
+        }
+
+        // Prevent unnecessary move
+        const currentFolderId = file.folder
+            ? String(file.folder)
+            : null;
+
+        const destinationFolderId = selectedFolder
+            ? String(selectedFolder._id)
+            : null;
+
+        if (currentFolderId === destinationFolderId) {
+
+            return res.status(400).json({
+                success: false,
+                message: "File is already in this location."
+            });
+
+        }
+
+        // Move file
+        file.folder = selectedFolder
+            ? selectedFolder._id
+            : null;
+
+        await file.save();
+
+        return res.status(200).json({
+
+            success: true,
+
+            message: selectedFolder
+                ? "File moved to folder successfully!"
+                : "File moved to My Files successfully!",
+
+            file
+
+        });
+
+    } catch (error) {
+
+        console.error("Move File Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to move file."
+        });
+
+    }
+
+};
+
+
+// ============================================
+// 4. DELETE FILE
 // ============================================
 
 export const deleteFile = async (req, res) => {
@@ -197,39 +359,29 @@ export const deleteFile = async (req, res) => {
     try {
 
         const userId = req.userId;
-
         const { fileId } = req.params;
 
         // Validate MongoDB ID
         if (!mongoose.Types.ObjectId.isValid(fileId)) {
 
             return res.status(400).json({
-
                 success: false,
-
                 message: "Invalid file ID."
-
             });
 
         }
 
         // Find file belonging to logged-in user
         const file = await File.findOne({
-
             _id: fileId,
-
             owner: userId
-
         });
 
         if (!file) {
 
             return res.status(404).json({
-
                 success: false,
-
                 message: "File not found."
-
             });
 
         }
@@ -274,35 +426,29 @@ export const deleteFile = async (req, res) => {
         ) {
 
             return res.status(500).json({
-
                 success: false,
-
                 message: "Unable to delete file from cloud storage."
-
             });
 
         }
 
-        // Remove sharing records associated with this file
+        // Remove sharing records
         await Share.deleteMany({
             file: file._id
         });
 
-        // Delete file record from MongoDB
+        // Delete file record
         await file.deleteOne();
 
-        // Decrease user's storage usage
+        // Decrease storage usage
         await User.updateOne(
             { _id: userId },
             { $inc: { storageUsed: -file.size } }
         );
 
         return res.status(200).json({
-
             success: true,
-
             message: "File deleted successfully!"
-
         });
 
     } catch (error) {
@@ -310,11 +456,8 @@ export const deleteFile = async (req, res) => {
         console.error("Delete File Error:", error);
 
         return res.status(500).json({
-
             success: false,
-
             message: "Unable to delete file."
-
         });
 
     }
