@@ -34,11 +34,17 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
     } = useAuth();
 
     const [storageUsed, setStorageUsed] = useState(0);
+    const [storageLimit, setStorageLimit] = useState(
+        10 * 1024 * 1024 * 1024
+    );
+
     const [favoriteCount, setFavoriteCount] = useState(0);
     const [recycleBinCount, setRecycleBinCount] = useState(0);
 
 
+    // ============================================
     // SIDEBAR MENU ITEMS
+    // ============================================
 
     const menuItems = [
         { title: "Dashboard", icon: LayoutDashboard, path: "/" },
@@ -49,28 +55,34 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
         { title: "Recycle Bin", icon: Trash2, path: "/recycle-bin" }
     ];
 
+
     const currentActiveItem =
         menuItems.find(item => item.path === location.pathname)?.title ||
         activeItem ||
         "";
 
 
+    // ============================================
     // FETCH STORAGE INFORMATION
+    // ============================================
 
     const fetchStorage = async () => {
 
         try {
 
-            const response = await api.get("/files");
+            const response = await api.get("/files/storage");
 
-            const files = response.data.files || [];
+            if (response.data.success) {
 
-            const totalSize = files.reduce(
-                (total, file) => total + (file.size || 0),
-                0
-            );
+                setStorageUsed(
+                    response.data.storage.usedStorage
+                );
 
-            setStorageUsed(totalSize);
+                setStorageLimit(
+                    response.data.storage.totalStorage
+                );
+
+            }
 
         } catch (error) {
 
@@ -102,7 +114,9 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
     }, []);
 
 
+    // ============================================
     // FETCH FAVOURITE COUNT
+    // ============================================
 
     const fetchFavoriteCount = async () => {
 
@@ -147,7 +161,9 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
     }, []);
 
 
+    // ============================================
     // FETCH RECYCLE BIN COUNT
+    // ============================================
 
     const fetchRecycleBinCount = async () => {
 
@@ -192,7 +208,9 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
     }, []);
 
 
+    // ============================================
     // FORMAT STORAGE SIZE
+    // ============================================
 
     const formatSize = (bytes) => {
 
@@ -211,7 +229,9 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
     };
 
 
+    // ============================================
     // USER INFORMATION
+    // ============================================
 
     const fullName = [
         user?.firstName,
@@ -226,16 +246,17 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
         .map(name => name[0].toUpperCase())
         .join("");
 
-    const storageLimit =
-        user?.storageLimit || 10 * 1024 * 1024 * 1024;
+    const storagePercentage = storageLimit > 0
+        ? Math.min(
+            (storageUsed / storageLimit) * 100,
+            100
+        )
+        : 0;
 
-    const storagePercentage = Math.min(
-        (storageUsed / storageLimit) * 100,
-        100
-    );
 
-
+    // ============================================
     // NAVIGATION
+    // ============================================
 
     const handleNavigation = (item) => {
 
@@ -250,7 +271,24 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
     };
 
 
+    // ============================================
+    // MANAGE STORAGE NAVIGATION
+    // ============================================
+
+    const handleManageStorage = () => {
+
+        setActiveItem?.("Manage Storage");
+
+        navigate("/manage-storage");
+
+        onClose?.();
+
+    };
+
+
+    // ============================================
     // LOGOUT
+    // ============================================
 
     const handleLogout = async () => {
 
@@ -273,7 +311,9 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
     };
 
 
+    // ============================================
     // SIDEBAR UI
+    // ============================================
 
     return (
 
@@ -435,8 +475,17 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
                             </p>
 
 
-                            <button className="upgrade-btn">
+                            <button
+                                className={`upgrade-btn ${
+                                    location.pathname === "/manage-storage"
+                                        ? "active"
+                                        : ""
+                                }`}
+                                onClick={handleManageStorage}
+                            >
+
                                 Manage storage
+
                             </button>
 
                         </div>

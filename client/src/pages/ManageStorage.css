@@ -1,0 +1,799 @@
+/* ==========================================
+   MANAGE STORAGE PAGE
+========================================== */
+
+.manage-storage-content {
+    width: 100%;
+    max-width: 1500px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: 30px 34px 45px;
+    box-sizing: border-box;
+}
+
+
+/* ==========================================
+   PAGE HEADER
+========================================== */
+
+.storage-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.storage-page-header h1 {
+    font-size: 25px;
+    font-weight: 700;
+    letter-spacing: -0.6px;
+    color: var(--text-primary);
+    margin-bottom: 7px;
+}
+
+.storage-page-header p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.storage-refresh-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 10px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 9px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+    flex-shrink: 0;
+}
+
+.storage-refresh-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.storage-refresh-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.storage-spinning {
+    animation: storage-spin 1s linear infinite;
+}
+
+
+/* ==========================================
+   SECTION TITLES
+========================================== */
+
+.storage-section-title {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 22px;
+}
+
+.storage-title-icon {
+    width: 43px;
+    height: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-light);
+    color: var(--accent-color);
+    border-radius: 11px;
+    flex-shrink: 0;
+}
+
+.storage-section-title h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.storage-section-title p {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+
+/* ==========================================
+   STORAGE OVERVIEW
+========================================== */
+
+.storage-overview-section {
+    margin-bottom: 34px;
+}
+
+
+/* ==========================================
+   SUMMARY CARDS
+========================================== */
+
+.storage-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 17px;
+    margin-bottom: 18px;
+}
+
+.storage-summary-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-width: 0;
+    padding: 20px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    transition: 0.2s ease;
+}
+
+.storage-summary-card:hover {
+    border-color: var(--accent-color);
+    transform: translateY(-2px);
+}
+
+.summary-card-icon {
+    width: 43px;
+    height: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    flex-shrink: 0;
+}
+
+.used-icon {
+    background: var(--accent-light);
+    color: var(--accent-color);
+}
+
+.total-icon {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+}
+
+.available-icon {
+    background: rgba(22, 163, 106, 0.12);
+    color: #16a36a;
+}
+
+.storage-summary-card > div:last-child {
+    min-width: 0;
+}
+
+.storage-summary-card span {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 7px;
+}
+
+.storage-summary-card h3 {
+    font-size: 21px;
+    font-weight: 700;
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+}
+
+
+/* ==========================================
+   STORAGE USAGE CARD
+========================================== */
+
+.storage-usage-card {
+    padding: 22px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+.storage-usage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 19px;
+}
+
+.storage-usage-header h3 {
+    font-size: 14px;
+    font-weight: 650;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.storage-usage-header p {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.storage-usage-percentage {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent-color);
+    white-space: nowrap;
+}
+
+.storage-progress-track {
+    width: 100%;
+    height: 11px;
+    background: var(--bg-tertiary);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.storage-progress-fill {
+    height: 100%;
+    min-width: 0;
+    background: var(--accent-color);
+    border-radius: 20px;
+    transition: width 0.5s ease;
+}
+
+.storage-progress-labels {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 11px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+
+/* ==========================================
+   GENERAL SECTIONS
+========================================== */
+
+.storage-section {
+    margin-bottom: 35px;
+    min-width: 0;
+}
+
+.storage-section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 18px;
+}
+
+.storage-section-heading h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.storage-section-heading p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.storage-section-icon {
+    color: var(--accent-color);
+}
+
+
+/* ============================================
+   CATEGORY GRID - INTERACTIVE DESIGN
+============================================ */
+
+.storage-category-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.storage-category-card {
+    position: relative;
+    overflow: hidden;
+
+    padding: 24px;
+
+    background: linear-gradient(
+        145deg,
+        var(--bg-secondary),
+        var(--bg-tertiary)
+    );
+
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+
+    cursor: default;
+
+    transition:
+        transform 0.3s ease,
+        background 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+/* Animated accent highlight */
+
+.storage-category-card::before {
+    content: "";
+
+    position: absolute;
+    top: 0;
+    left: -100%;
+
+    width: 100%;
+    height: 3px;
+
+    background: var(--accent-color);
+
+    transition: left 0.4s ease;
+}
+
+/* Soft background animation */
+
+.storage-category-card::after {
+    content: "";
+
+    position: absolute;
+    top: -80px;
+    right: -80px;
+
+    width: 160px;
+    height: 160px;
+
+    border-radius: 50%;
+
+    background: var(--accent-light);
+
+    opacity: 0;
+
+    transform: scale(0.5);
+
+    transition:
+        opacity 0.35s ease,
+        transform 0.4s ease;
+
+    pointer-events: none;
+}
+
+/* Hover Effect */
+
+@media (hover: hover) and (pointer: fine) {
+
+    .storage-category-card:hover {
+        transform: translateY(-7px);
+
+        background: linear-gradient(
+            145deg,
+            var(--accent-light),
+            var(--bg-secondary)
+        );
+
+        border-color: var(--accent-color);
+
+        box-shadow:
+            0 10px 25px rgba(0, 0, 0, 0.08),
+            0 0 0 1px var(--accent-light);
+    }
+
+    .storage-category-card:hover::before {
+        left: 0;
+    }
+
+    .storage-category-card:hover::after {
+        opacity: 0.7;
+        transform: scale(1.3);
+    }
+
+    .storage-category-card:hover .category-icon {
+        background: var(--accent-color);
+        color: #ffffff;
+        transform: scale(1.08) rotate(-5deg);
+    }
+
+    .storage-category-card:hover .category-progress-fill {
+        filter: brightness(1.15);
+    }
+
+}
+
+/* Category Card Top */
+
+.category-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 22px;
+}
+
+.category-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    background: var(--accent-light);
+    color: var(--accent-color);
+    flex-shrink: 0;
+}
+
+.category-card-top span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 11px;
+    border-radius: 20px;
+    background: var(--accent-light);
+    color: var(--accent-color);
+    font-size: 11px;
+    font-weight: 650;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+/* Category Information */
+
+.storage-category-card h3 {
+    position: relative;
+    z-index: 1;
+
+    font-size: 15px;
+    font-weight: 650;
+
+    color: var(--text-primary);
+
+    margin-bottom: 7px;
+}
+
+.storage-category-card p {
+    position: relative;
+    z-index: 1;
+
+    font-size: 13px;
+    font-weight: 550;
+
+    color: var(--text-secondary);
+
+    margin-bottom: 17px;
+}
+
+/* Progress Bar */
+
+.category-progress-track {
+    position: relative;
+    z-index: 1;
+
+    width: 100%;
+    height: 7px;
+
+    background: var(--bg-tertiary);
+
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.category-progress-fill {
+    height: 100%;
+
+    background: var(--accent-color);
+
+    border-radius: 20px;
+
+    transition:
+        width 0.7s ease,
+        filter 0.3s ease;
+}
+
+/* Accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .storage-category-card,
+    .storage-category-card::before,
+    .storage-category-card::after,
+    .category-icon,
+    .category-progress-fill {
+        transition: none !important;
+    }
+
+    .storage-category-card:hover {
+        transform: none;
+    }
+
+}
+
+/* ==========================================
+   LARGEST FILES
+========================================== */
+
+.largest-files-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.largest-files-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(100px, 1fr) minmax(90px, 0.5fr);
+    gap: 15px;
+    padding: 14px 20px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.largest-files-header span {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: var(--text-secondary);
+}
+
+.largest-file-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(100px, 1fr) minmax(90px, 0.5fr);
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.largest-file-item:last-child {
+    border-bottom: none;
+}
+
+.largest-file-name {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.largest-file-icon {
+    width: 39px;
+    height: 39px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-light);
+    color: var(--accent-color);
+    border-radius: 9px;
+    flex-shrink: 0;
+}
+
+.largest-file-name > div:last-child {
+    min-width: 0;
+}
+
+.largest-file-name h4 {
+    font-size: 12px;
+    font-weight: 650;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 5px;
+}
+
+.largest-file-name span {
+    font-size: 10px;
+    color: var(--text-secondary);
+}
+
+.largest-file-type {
+    font-size: 11px;
+    color: var(--text-secondary);
+    overflow-wrap: anywhere;
+}
+
+.largest-file-size {
+    font-size: 12px;
+    font-weight: 650;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+
+/* ==========================================
+   EMPTY STATE
+========================================== */
+
+.storage-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 45px 20px;
+    color: var(--text-secondary);
+}
+
+.storage-empty-state svg {
+    color: var(--accent-color);
+}
+
+.storage-empty-state h3 {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.storage-empty-state p {
+    font-size: 12px;
+}
+
+
+/* ==========================================
+   LOADING STATE
+========================================== */
+
+.storage-loading {
+    min-height: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 13px;
+    color: var(--text-secondary);
+}
+
+.storage-loading-icon {
+    color: var(--accent-color);
+    animation: storage-spin 1s linear infinite;
+}
+
+@keyframes storage-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* ==========================================
+   ERROR STATE
+========================================== */
+
+.storage-error {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    margin-bottom: 22px;
+    border-radius: 10px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    font-size: 13px;
+}
+
+.storage-error span {
+    flex: 1;
+}
+
+.storage-error button {
+    padding: 7px 12px;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 6px;
+    background: transparent;
+    color: #ef4444;
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+
+/* ==========================================
+   RESPONSIVE DESIGN
+========================================== */
+
+@media (max-width: 1100px) {
+
+    .storage-category-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .storage-summary-grid {
+        gap: 12px;
+    }
+
+    .storage-summary-card {
+        padding: 16px;
+    }
+
+}
+
+
+@media (max-width: 768px) {
+
+    .manage-storage-content {
+        padding: 24px 20px 35px;
+    }
+
+    .storage-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .storage-summary-card {
+        padding: 17px;
+    }
+
+    .storage-category-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (max-width: 550px) {
+
+    .manage-storage-content {
+        padding: 20px 14px 30px;
+    }
+
+    .storage-page-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .storage-page-header h1 {
+        font-size: 21px;
+    }
+
+    .storage-refresh-btn {
+        width: 100%;
+    }
+
+    .storage-usage-card {
+        padding: 16px;
+    }
+
+    .storage-usage-header {
+        align-items: flex-start;
+    }
+
+    .storage-usage-percentage {
+        font-size: 17px;
+    }
+
+    .storage-progress-labels {
+        font-size: 10px;
+    }
+
+    .storage-category-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .largest-files-header {
+        display: none;
+    }
+
+    .largest-file-item {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        padding: 14px;
+    }
+
+    .largest-file-type {
+        display: none;
+    }
+
+    .largest-file-size {
+        font-size: 11px;
+    }
+
+    .storage-error {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+}

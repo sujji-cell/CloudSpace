@@ -11,6 +11,10 @@ import {
     getFileAccessUrl
 } from "../controllers/fileAccessController.js";
 
+import {
+    getStorageOverview
+} from "../controllers/storageController.js";
+
 import upload from "../middleware/uploadMiddleware.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -29,6 +33,13 @@ router.get(
     "/",
     authMiddleware,
     getUserFiles
+);
+
+// Get storage overview
+router.get(
+    "/storage",
+    authMiddleware,
+    getStorageOverview
 );
 
 // Move a file

@@ -17,11 +17,14 @@ import SharedFiles from "./pages/SharedFiles";
 import RecentFiles from "./pages/RecentFiles";
 import Favorites from "./pages/Favorites";
 import RecycleBin from "./pages/RecycleBin";
+import ManageStorage from "./pages/ManageStorage";
 
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
+
 import Account from "./pages/Account";
 import Settings from "./pages/Settings";
+
 
 function App() {
 
@@ -50,7 +53,6 @@ function App() {
                         element={<Login />}
                     />
 
-                    
 
                     {/* Protected Routes */}
 
@@ -91,15 +93,22 @@ function App() {
                             element={<SharedFile />}
                         />
 
-
-                        <Route path="/account" element={<Account />} />
+                        <Route
+                            path="/account"
+                            element={<Account />}
+                        />
 
                         <Route
-                        path="/settings"
-                        element={<Settings />}
-                    />
+                            path="/settings"
+                            element={<Settings />}
+                        />
 
+                        {/* Manage Storage */}
 
+                        <Route
+                            path="/manage-storage"
+                            element={<ManageStorage />}
+                        />
 
                     </Route>
 
