@@ -4,7 +4,8 @@ import {
     shareFile,
     getSharedWithMe,
     getSharedByMe,
-    revokeShare
+    revokeShare,
+    removeSharedFile
 } from "../controllers/shareController.js";
 
 import authMiddleware from "../middleware/authMiddleware.js";
@@ -20,7 +21,10 @@ router.get("/with-me", authMiddleware, getSharedWithMe);
 // Get files shared by the logged-in user
 router.get("/by-me", authMiddleware, getSharedByMe);
 
-// Revoke access to a shared file
+// Remove a file shared with the logged-in user
+router.delete("/remove/:shareId", authMiddleware, removeSharedFile);
+
+// Revoke access to a shared file (owner only)
 router.delete("/:shareId", authMiddleware, revokeShare);
 
 export default router;

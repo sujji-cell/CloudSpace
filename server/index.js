@@ -10,7 +10,7 @@ import shareRoutes from "./routes/shareRoutes.js";
 import favoriteRoutes from "./routes/favoriteRoutes.js";
 import folderRoutes from "./routes/folderRoutes.js";
 import recycleBinRoutes from "./routes/recycleBinRoutes.js";
-
+import notificationRoutes from "./routes/notificationRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -47,6 +47,9 @@ app.use("/api/folders", folderRoutes);
 
 // Recycle Bin
 app.use("/api/recycle-bin", recycleBinRoutes);
+
+// Notifications
+app.use("/api/notifications", notificationRoutes);
 
 // Start Server
 

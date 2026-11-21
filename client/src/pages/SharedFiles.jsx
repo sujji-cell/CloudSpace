@@ -263,6 +263,10 @@ function SharedFiles() {
     // DOWNLOAD FILE
     // --------------------------------
 
+    // --------------------------------
+    // DOWNLOAD FILE
+    // --------------------------------
+
     const handleDownload = async (fileId, fileName) => {
 
         try {
@@ -275,17 +279,36 @@ function SharedFiles() {
                 throw new Error("File access URL was not returned.");
             }
 
+            // Fetch the actual file
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error("Unable to download file.");
+            }
+
+            // Convert response into a Blob
+            const blob = await response.blob();
+
+            // Create a temporary download URL
+            const downloadUrl = window.URL.createObjectURL(blob);
+
+            // Create download link
             const link = document.createElement("a");
 
-            link.href = url;
+            link.href = downloadUrl;
             link.download = fileName || "download";
-            link.target = "_blank";
 
             document.body.appendChild(link);
 
+            // Trigger download
             link.click();
 
-            document.body.removeChild(link);
+            // Clean up
+            link.remove();
+
+            setTimeout(() => {
+                window.URL.revokeObjectURL(downloadUrl);
+            }, 1000);
 
         } catch (err) {
 
@@ -304,7 +327,6 @@ function SharedFiles() {
         }
 
     };
-
 
     // --------------------------------
     // REVOKE FILE ACCESS
@@ -337,6 +359,48 @@ function SharedFiles() {
             alert(
                 err.response?.data?.message ||
                 "Unable to revoke file access."
+            );
+
+        } finally {
+
+            setActionLoading("");
+
+        }
+
+    };
+
+
+    // --------------------------------
+    // REMOVE FILE SHARED WITH ME
+    // --------------------------------
+
+    const handleRemoveSharedFile = async (shareId) => {
+
+        const confirmRemove = window.confirm(
+            "Are you sure you want to remove this shared file from your account?"
+        );
+
+        if (!confirmRemove) return;
+
+        try {
+
+            setActionLoading(shareId);
+
+            await api.delete(`/shares/remove/${shareId}`);
+
+            setSharedWithMe((previous) =>
+                previous.filter((share) => share._id !== shareId)
+            );
+
+            alert("Shared file removed successfully.");
+
+        } catch (err) {
+
+            console.error("Remove shared file error:", err);
+
+            alert(
+                err.response?.data?.message ||
+                "Unable to remove shared file."
             );
 
         } finally {
@@ -724,6 +788,23 @@ function SharedFiles() {
                                                         disabled={
                                                             actionLoading === share._id
                                                         }
+                                                    >
+                                                        <Trash2 size={17} />
+                                                    </button>
+
+                                                )}
+
+                                                {/* REMOVE SHARED FILE */}
+
+                                                {activeTab === "with-me" && (
+
+                                                    <button
+                                                        className="revoke-button"
+                                                        title="Remove from Shared With Me"
+                                                        onClick={() =>
+                                                            handleRemoveSharedFile(share._id)
+                                                        }
+                                                        disabled={actionLoading === share._id}
                                                     >
                                                         <Trash2 size={17} />
                                                     </button>
