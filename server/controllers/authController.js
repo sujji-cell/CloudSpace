@@ -3,7 +3,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import sendEmail from "../utils/sendEmail.js";
-
+import { createSession } from "../utils/sessionUtils.js";
+import Session from "../models/Session.js";
+import LoginActivity from "../models/LoginActivity.js";
 
 // ==========================================
 // REGISTER USER
@@ -450,14 +452,116 @@ export const loginUser = async (req, res) => {
             });
         }
 
-        // Generate JWT
+        // ======================================
+        // TWO-FACTOR AUTHENTICATION
+        // ======================================
+
+        if (user.twoFactorEnabled) {
+
+            // Generate secure 6-digit OTP
+            const otp = crypto.randomInt(100000, 1000000).toString();
+
+            // Hash OTP using HMAC
+            const otpHash = crypto
+                .createHmac("sha256", process.env.JWT_SECRET)
+                .update(otp)
+                .digest("hex");
+
+            // Save OTP details
+            user.loginOtpHash = otpHash;
+            user.loginOtpExpiresAt = new Date(
+                Date.now() + 5 * 60 * 1000
+            );
+            user.loginOtpAttempts = 0;
+            user.loginOtpLastSentAt = new Date();
+
+            await user.save();
+
+            // Send login OTP
+            try {
+
+                await sendEmail(
+                    user.email,
+                    "Your CloudSpace Login Verification Code",
+                    `
+                        <div style="font-family: Arial, sans-serif; padding: 20px;">
+                            <h2>CloudSpace Login Verification</h2>
+
+                            <p>Hello ${user.firstName},</p>
+
+                            <p>
+                                Someone is attempting to log in to your
+                                CloudSpace account.
+                            </p>
+
+                            <p>Your login verification code is:</p>
+
+                            <h1 style="
+                                letter-spacing: 8px;
+                                color: #4169e1;
+                            ">
+                                ${otp}
+                            </h1>
+
+                            <p>This code expires in 5 minutes.</p>
+
+                            <p>
+                                If you did not attempt to log in,
+                                please secure your account.
+                            </p>
+
+                            <br />
+
+                            <p>Team CloudSpace</p>
+                        </div>
+                    `
+                );
+
+            } catch (emailError) {
+
+                // Clear OTP if email sending fails
+                user.loginOtpHash = undefined;
+                user.loginOtpExpiresAt = undefined;
+                user.loginOtpAttempts = 0;
+                user.loginOtpLastSentAt = undefined;
+
+                await user.save();
+
+                console.error("Login OTP email error:", emailError);
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Unable to send login verification code."
+                });
+            }
+
+            // Do not generate JWT yet
+            return res.status(200).json({
+                success: true,
+                requiresTwoFactor: true,
+                message: "A verification code has been sent to your email.",
+                email: user.email
+            });
+        }
+
+        // ======================================
+        // NORMAL LOGIN (2FA DISABLED)
+        // ======================================
+
+        // Create a new session
+        const session = await createSession(user._id, req);
+
+        // Generate JWT with userId and sessionId
         const token = jwt.sign(
-            { userId: user._id },
+            {
+                userId: user._id,
+                sessionId: session.sessionId
+            },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
 
-        // Set HTTP-only cookie
+        // Store JWT in HTTP-only cookie
         res.cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -476,7 +580,8 @@ export const loginUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 storageUsed: user.storageUsed,
-                storageLimit: user.storageLimit
+                storageLimit: user.storageLimit,
+                twoFactorEnabled: user.twoFactorEnabled
             }
         });
 
@@ -491,6 +596,342 @@ export const loginUser = async (req, res) => {
 };
 
 
+
+// ==========================================
+// VERIFY LOGIN OTP
+// ==========================================
+
+export const verifyLoginOtp = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and OTP are required."
+            });
+        }
+
+        if (!/^\d{6}$/.test(otp)) {
+            return res.status(400).json({
+                success: false,
+                message: "Please enter a valid 6-digit OTP."
+            });
+        }
+
+        const user = await User.findOne({
+            email: email.trim().toLowerCase()
+        }).select("+loginOtpHash");
+
+        if (!user || !user.twoFactorEnabled) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid verification request."
+            });
+        }
+
+        if (!user.loginOtpHash || !user.loginOtpExpiresAt) {
+            return res.status(400).json({
+                success: false,
+                message: "Please request a new login OTP."
+            });
+        }
+
+        if (user.loginOtpExpiresAt < new Date()) {
+            return res.status(400).json({
+                success: false,
+                message: "OTP has expired. Please log in again."
+            });
+        }
+
+        if (user.loginOtpAttempts >= 5) {
+            return res.status(429).json({
+                success: false,
+                message: "Too many incorrect attempts. Please log in again."
+            });
+        }
+
+        // Hash entered OTP
+        const enteredOtpHash = crypto
+            .createHmac("sha256", process.env.JWT_SECRET)
+            .update(otp)
+            .digest("hex");
+
+        const storedHash = Buffer.from(user.loginOtpHash, "hex");
+        const enteredHash = Buffer.from(enteredOtpHash, "hex");
+
+        const isOtpValid =
+            storedHash.length === enteredHash.length &&
+            crypto.timingSafeEqual(storedHash, enteredHash);
+
+        if (!isOtpValid) {
+
+            user.loginOtpAttempts += 1;
+
+            await user.save();
+
+            return res.status(400).json({
+                success: false,
+                message: "Incorrect OTP. Please try again."
+            });
+        }
+
+        // Clear OTP details
+        user.loginOtpHash = undefined;
+        user.loginOtpExpiresAt = undefined;
+        user.loginOtpAttempts = 0;
+        user.loginOtpLastSentAt = undefined;
+
+        await user.save();
+
+        // Generate JWT only after successful verification
+        // Create a new session after successful OTP verification
+        const session = await createSession(user._id, req);
+
+        // Generate JWT with userId and sessionId
+        const token = jwt.sign(
+            {
+                userId: user._id,
+                sessionId: session.sessionId
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        // Store JWT in HTTP-only cookie
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Login successful.",
+            user: {
+                id: user._id,
+                firstName: user.firstName,
+                middleName: user.middleName,
+                lastName: user.lastName,
+                name: user.name,
+                email: user.email,
+                storageUsed: user.storageUsed,
+                storageLimit: user.storageLimit,
+                twoFactorEnabled: user.twoFactorEnabled
+            }
+        });
+
+    } catch (error) {
+        console.error("Login OTP verification error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to verify login OTP."
+        });
+    }
+};
+
+
+// ==========================================
+// RESEND LOGIN OTP
+// ==========================================
+
+export const resendLoginOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Email is required."
+            });
+        }
+
+        const user = await User.findOne({
+            email: email.trim().toLowerCase()
+        }).select("+loginOtpHash");
+
+        if (
+            !user ||
+            !user.twoFactorEnabled ||
+            !user.loginOtpHash
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "No pending login verification request."
+            });
+        }
+
+        // 60-second resend cooldown
+        if (user.loginOtpLastSentAt) {
+
+            const timePassed =
+                Date.now() - user.loginOtpLastSentAt.getTime();
+
+            if (timePassed < 60000) {
+                return res.status(429).json({
+                    success: false,
+                    message: "Please wait before requesting another OTP."
+                });
+            }
+        }
+
+        // Generate new OTP
+        const otp = crypto.randomInt(100000, 1000000).toString();
+
+        const otpHash = crypto
+            .createHmac("sha256", process.env.JWT_SECRET)
+            .update(otp)
+            .digest("hex");
+
+        // Update OTP details
+        user.loginOtpHash = otpHash;
+        user.loginOtpExpiresAt = new Date(
+            Date.now() + 5 * 60 * 1000
+        );
+        user.loginOtpAttempts = 0;
+        user.loginOtpLastSentAt = new Date();
+
+        await user.save();
+
+        try {
+
+            await sendEmail(
+                user.email,
+                "Your New CloudSpace Login OTP",
+                `
+                    <div style="font-family: Arial, sans-serif; padding: 20px;">
+                        <h2>CloudSpace Login Verification</h2>
+
+                        <p>Hello ${user.firstName},</p>
+
+                        <p>Your new login verification code is:</p>
+
+                        <h1 style="
+                            letter-spacing: 8px;
+                            color: #4169e1;
+                        ">
+                            ${otp}
+                        </h1>
+
+                        <p>This code expires in 5 minutes.</p>
+
+                        <p>Team CloudSpace</p>
+                    </div>
+                `
+            );
+
+        } catch (emailError) {
+
+            user.loginOtpHash = undefined;
+            user.loginOtpExpiresAt = undefined;
+            user.loginOtpAttempts = 0;
+            user.loginOtpLastSentAt = undefined;
+
+            await user.save();
+
+            console.error("Resend login OTP error:", emailError);
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to send a new OTP."
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "A new login OTP has been sent."
+        });
+
+    } catch (error) {
+        console.error("Resend login OTP error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to resend login OTP."
+        });
+    }
+};
+
+
+
+// ==========================================
+// UPDATE TWO-FACTOR AUTHENTICATION SETTINGS
+// ==========================================
+
+export const updateTwoFactorSettings = async (req, res) => {
+    try {
+        const { enabled, currentPassword } = req.body;
+
+        if (typeof enabled !== "boolean" || !currentPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "A valid setting and current password are required."
+            });
+        }
+
+        const user = await User.findById(req.userId)
+            .select("+password");
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found."
+            });
+        }
+
+        // Confirm current password
+        const isPasswordCorrect = await bcrypt.compare(
+            currentPassword,
+            user.password
+        );
+
+        if (!isPasswordCorrect) {
+            return res.status(400).json({
+                success: false,
+                message: "Current password is incorrect."
+            });
+        }
+
+        if (!user.isVerified) {
+            return res.status(403).json({
+                success: false,
+                message: "Please verify your email first."
+            });
+        }
+
+        // Update 2FA setting
+        user.twoFactorEnabled = enabled;
+
+        // Clear any pending login OTP
+        user.loginOtpHash = undefined;
+        user.loginOtpExpiresAt = undefined;
+        user.loginOtpAttempts = 0;
+        user.loginOtpLastSentAt = undefined;
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: enabled
+                ? "Two-factor authentication enabled successfully."
+                : "Two-factor authentication disabled successfully.",
+            twoFactorEnabled: user.twoFactorEnabled
+        });
+
+    } catch (error) {
+        console.error("Update 2FA settings error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to update two-factor authentication settings."
+        });
+    }
+};
+
+
+
 // ==========================================
 // GET CURRENT USER
 // ==========================================
@@ -498,7 +939,8 @@ export const loginUser = async (req, res) => {
 export const getCurrentUser = async (req, res) => {
     try {
         const user = await User.findById(req.userId);
-
+        console.log("USER ID:", user?._id);
+        console.log("2FA STATUS FROM DATABASE:", user?.twoFactorEnabled);
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -517,7 +959,8 @@ export const getCurrentUser = async (req, res) => {
                 email: user.email,
                 storageUsed: user.storageUsed,
                 storageLimit: user.storageLimit,
-                createdAt: user.createdAt
+                createdAt: user.createdAt,
+                twoFactorEnabled: user.twoFactorEnabled,
             }
         });
 
@@ -712,18 +1155,59 @@ export const changePassword = async (req, res) => {
 // LOGOUT USER
 // ==========================================
 
-export const logoutUser = (req, res) => {
+export const logoutUser = async (req, res) => {
+    try {
+        // Find and revoke the current session
+        const session = await Session.findOneAndUpdate(
+            {
+                userId: req.userId,
+                sessionId: req.sessionId,
+                isRevoked: false
+            },
+            {
+                isRevoked: true,
+                revokedAt: new Date()
+            },
+            {
+                new: true
+            }
+        );
 
-    res.clearCookie("token", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax"
-    });
+        // Record logout activity
+        if (session) {
+            await LoginActivity.create({
+                userId: req.userId,
+                sessionId: req.sessionId,
+                event: "logout",
+                ipAddress: session.ipAddress,
+                userAgent: session.userAgent,
+                device: session.device,
+                browser: session.browser,
+                operatingSystem: session.operatingSystem,
+                details: "User logged out successfully."
+            });
+        }
 
-    return res.status(200).json({
-        success: true,
-        message: "Logged out successfully."
-    });
+        // Clear authentication cookie
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax"
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Logged out successfully."
+        });
+
+    } catch (error) {
+        console.error("Logout error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong during logout."
+        });
+    }
 };
 
 // Get Notification Preferences

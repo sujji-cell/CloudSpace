@@ -11,6 +11,7 @@ import favoriteRoutes from "./routes/favoriteRoutes.js";
 import folderRoutes from "./routes/folderRoutes.js";
 import recycleBinRoutes from "./routes/recycleBinRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import sessionRoutes from "./routes/sessionRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -31,6 +32,8 @@ app.get("/", (req, res) => {
     res.send("CloudSpace Server is Running!");
 });
 
+
+
 // Authentication Routes
 
 app.use("/api/auth", authRoutes);
@@ -50,6 +53,9 @@ app.use("/api/recycle-bin", recycleBinRoutes);
 
 // Notifications
 app.use("/api/notifications", notificationRoutes);
+
+// Session Management
+app.use("/api/sessions", sessionRoutes);
 
 // Start Server
 

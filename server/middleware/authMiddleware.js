@@ -1,11 +1,11 @@
 import jwt from "jsonwebtoken";
+import Session from "../models/Session.js";
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
     try {
-        // Get token from cookies
+        // 1. Get token from cookies
         const token = req.cookies.token;
 
-        // Check if token exists
         if (!token) {
             return res.status(401).json({
                 success: false,
@@ -13,16 +13,49 @@ const authMiddleware = (req, res, next) => {
             });
         }
 
-        // Verify token
+        // 2. Verify JWT
         const decoded = jwt.verify(
             token,
             process.env.JWT_SECRET
         );
 
-        // Store user ID in request
-        req.userId = decoded.userId;
+        if (!decoded.sessionId) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid session. Please login again."
+            });
+        }
 
-        // Continue to next middleware or controller
+        // 3. Atomically validate session and update activity
+        const session = await Session.findOneAndUpdate(
+            {
+                userId: decoded.userId,
+                sessionId: decoded.sessionId,
+                isRevoked: false,
+                expiresAt: { $gt: new Date() }
+            },
+            {
+                $set: {
+                    lastActiveAt: new Date()
+                }
+            },
+            {
+                new: true
+            }
+        );
+
+        // 4. Reject expired or revoked sessions
+        if (!session) {
+            return res.status(401).json({
+                success: false,
+                message: "Session expired or revoked. Please login again."
+            });
+        }
+
+        // 5. Attach authenticated user and session
+        req.userId = decoded.userId;
+        req.sessionId = decoded.sessionId;
+
         next();
 
     } catch (error) {

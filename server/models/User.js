@@ -123,47 +123,83 @@ const userSchema = new mongoose.Schema(
             default: false
         },
 
-        // Hashed Email OTP (not the original OTP)
+        // ======================================
+        // EMAIL VERIFICATION OTP
+        // ======================================
+
         emailOtpHash: {
             type: String,
             select: false
         },
 
-        // OTP Expiration Time
         emailOtpExpiresAt: {
             type: Date
         },
 
-        // Number of Incorrect OTP Attempts
         emailOtpAttempts: {
             type: Number,
             default: 0
         },
 
-        // Last OTP Sent Time (for resend cooldown)
         emailOtpLastSentAt: {
             type: Date
         },
 
-        // User Notification Preferences
+        // ======================================
+        // TWO-FACTOR AUTHENTICATION (2FA)
+        // ======================================
+
+        // Whether the user has enabled 2FA
+        twoFactorEnabled: {
+            type: Boolean,
+            default: false
+        },
+
+        // Hashed Login OTP
+        loginOtpHash: {
+            type: String,
+            select: false
+        },
+
+        // Login OTP Expiration Time
+        loginOtpExpiresAt: {
+            type: Date
+        },
+
+        // Number of Incorrect Login OTP Attempts
+        loginOtpAttempts: {
+            type: Number,
+            default: 0
+        },
+
+        // Last Login OTP Sent Time
+        loginOtpLastSentAt: {
+            type: Date
+        },
+
+        // ======================================
+        // USER PREFERENCES
+        // ======================================
+
         notificationPreferences: {
             type: notificationPreferencesSchema,
             default: () => ({})
         },
 
-        // User Appearance Preferences
-appearancePreferences: {
-    type: appearancePreferencesSchema,
-    default: () => ({})
-},
+        appearancePreferences: {
+            type: appearancePreferencesSchema,
+            default: () => ({})
+        },
 
-        // Total Storage Used (Bytes)
+        // ======================================
+        // STORAGE INFORMATION
+        // ======================================
+
         storageUsed: {
             type: Number,
             default: 0
         },
 
-        // Maximum Storage Limit (10 GB)
         storageLimit: {
             type: Number,
             default: 10 * 1024 * 1024 * 1024
