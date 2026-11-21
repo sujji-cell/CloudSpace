@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -28,7 +29,8 @@ import {
     ArrowLeft,
     Pencil,
     FolderOpen,
-    MoveRight
+    MoveRight,
+    History
 } from "lucide-react";
 
 import "./MyFiles.css";
@@ -40,7 +42,6 @@ function MyFiles() {
 
     const [searchParams, setSearchParams] = useSearchParams();
 
-    // Restore the folder ID from the URL when the page loads.
     const [currentFolderId, setCurrentFolderId] = useState(
         () => searchParams.get("folder")
     );
@@ -100,10 +101,175 @@ function MyFiles() {
     // Copy link state
     const [linkCopied, setLinkCopied] = useState(false);
 
+    // --------------------------------
+    // FILE VERSION HISTORY STATES
+    // --------------------------------
+
+    const [versionFile, setVersionFile] = useState(null);
+    const [versions, setVersions] = useState([]);
+    const [versionLoading, setVersionLoading] = useState(false);
+    const [versionError, setVersionError] = useState("");
+
+    const [versionUploading, setVersionUploading] = useState(false);
+    const [versionRestoring, setVersionRestoring] = useState(null);
+
+    const versionInputRef = useRef(null);
+
     // File upload states
     const fileInputRef = useRef(null);
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState("");
+
+
+    // --------------------------------
+    // FETCH FILE VERSION HISTORY
+    // --------------------------------
+
+    const fetchVersionHistory = async (file) => {
+        try {
+            setVersionFile(file);
+            setVersionLoading(true);
+            setVersionError("");
+            setVersions([]);
+
+            const response = await api.get(
+                `/files/${file._id}/versions`
+            );
+
+            setVersions(response.data.versions || []);
+
+        } catch (error) {
+            console.error("Version history error:", error);
+
+            setVersionError(
+                error.response?.data?.message ||
+                "Unable to load version history."
+            );
+
+        } finally {
+            setVersionLoading(false);
+        }
+    };
+
+    // --------------------------------
+    // CLOSE VERSION HISTORY MODAL
+    // --------------------------------
+
+    const closeVersionHistory = () => {
+        if (versionUploading || versionRestoring !== null) return;
+
+        setVersionFile(null);
+        setVersions([]);
+        setVersionError("");
+    };
+
+
+    // --------------------------------
+    // UPLOAD NEW FILE VERSION
+    // --------------------------------
+
+    const handleNewVersionUpload = async (e) => {
+        const selectedFile = e.target.files?.[0];
+
+        if (!selectedFile || !versionFile) return;
+
+        try {
+            setVersionUploading(true);
+            setVersionError("");
+
+            const formData = new FormData();
+            formData.append("file", selectedFile);
+
+            const response = await api.post(
+                `/files/${versionFile._id}/versions`,
+                formData
+            );
+
+            // Update the currently selected file
+            setVersionFile(response.data.file);
+
+            // Refresh version history
+            const historyResponse = await api.get(
+                `/files/${versionFile._id}/versions`
+            );
+
+            setVersions(historyResponse.data.versions || []);
+
+            // Refresh the main file list
+            await fetchFiles();
+
+            window.dispatchEvent(
+                new Event("cloudspace-files-updated")
+            );
+
+        } catch (error) {
+            console.error("New version upload error:", error);
+
+            setVersionError(
+                error.response?.data?.message ||
+                "Unable to upload the new version."
+            );
+
+        } finally {
+            setVersionUploading(false);
+
+            if (versionInputRef.current) {
+                versionInputRef.current.value = "";
+            }
+        }
+    };
+
+    // --------------------------------
+    // RESTORE PREVIOUS FILE VERSION
+    // --------------------------------
+
+    const handleRestoreVersion = async (versionNumber) => {
+        if (!versionFile) return;
+
+        const confirmed = window.confirm(
+            `Are you sure you want to restore version ${versionNumber}? Your current version will be preserved in the history.`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            setVersionRestoring(versionNumber);
+            setVersionError("");
+
+            const response = await api.post(
+                `/files/${versionFile._id}/versions/${versionNumber}/restore`
+            );
+
+            // Update the currently selected file
+            setVersionFile(response.data.file);
+
+            // Refresh version history
+            const historyResponse = await api.get(
+                `/files/${versionFile._id}/versions`
+            );
+
+            setVersions(historyResponse.data.versions || []);
+
+            // Refresh the main file list
+            await fetchFiles();
+
+            window.dispatchEvent(
+                new Event("cloudspace-files-updated")
+            );
+
+        } catch (error) {
+            console.error("Restore version error:", error);
+
+            setVersionError(
+                error.response?.data?.message ||
+                "Unable to restore this version."
+            );
+
+        } finally {
+            setVersionRestoring(null);
+        }
+    };
+
 
     // --------------------------------
     // FETCH USER FILES
@@ -346,11 +512,9 @@ function MyFiles() {
     const navigateToFolder = (folderId) => {
         const nextFolderId = folderId || null;
 
-        // Update the URL so the folder can be restored after refresh.
         if (nextFolderId) {
             setSearchParams({ folder: nextFolderId });
         } else {
-            // Remove the folder query parameter when returning to root.
             setSearchParams({});
         }
 
@@ -1427,6 +1591,13 @@ function MyFiles() {
                                             </button>
 
                                             <button
+                                                title="Version History"
+                                                onClick={() => fetchVersionHistory(file)}
+                                            >
+                                                <History size={18} />
+                                            </button>
+
+                                            <button
                                                 title="Share"
                                                 className="share-file-btn"
                                                 onClick={() => openShareModal(file)}
@@ -1912,6 +2083,219 @@ function MyFiles() {
 
                         </div>
                     )}
+
+                    {/* ========================================= */}
+                    {/* FILE VERSION HISTORY MODAL */}
+                    {/* ========================================= */}
+
+                    {versionFile && (
+                        <div
+                            className="version-modal-overlay"
+                            onClick={closeVersionHistory}
+                        >
+                            <div
+                                className="version-modal"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                {/* HEADER */}
+                                <div className="version-modal-header">
+                                    <div className="version-modal-title">
+                                        <History size={22} />
+
+                                        <div>
+                                            <h2>Version History</h2>
+                                            <p>
+                                                View and manage previous file versions
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        className="version-close-btn"
+                                        onClick={closeVersionHistory}
+                                        disabled={
+                                            versionUploading ||
+                                            versionRestoring !== null
+                                        }
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </div>
+
+                                {/* FILE INFORMATION */}
+                                <div className="version-file-info">
+                                    <FileText size={22} />
+
+                                    <div>
+                                        <h3>{versionFile.originalName}</h3>
+
+                                        <p>
+                                            Current Version:{" "}
+                                            {versionFile.currentVersion || 1}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* HIDDEN FILE INPUT */}
+                                <input
+                                    type="file"
+                                    ref={versionInputRef}
+                                    onChange={handleNewVersionUpload}
+                                    style={{ display: "none" }}
+                                />
+
+                                {/* UPLOAD NEW VERSION */}
+                                <button
+                                    className="version-upload-btn"
+                                    onClick={() =>
+                                        versionInputRef.current?.click()
+                                    }
+                                    disabled={
+                                        versionUploading ||
+                                        versionRestoring !== null
+                                    }
+                                >
+                                    <UploadCloud size={18} />
+
+                                    {versionUploading
+                                        ? "Uploading..."
+                                        : "Upload New Version"}
+                                </button>
+
+                                {/* ERROR MESSAGE */}
+                                {versionError && (
+                                    <div className="version-error">
+                                        <AlertTriangle size={17} />
+                                        <span>{versionError}</span>
+                                    </div>
+                                )}
+
+                                {/* LOADING */}
+                                {versionLoading ? (
+                                    <div className="version-loading">
+                                        <RefreshCw size={22} className="spin" />
+                                        <p>Loading version history...</p>
+                                    </div>
+                                ) : (
+                                    <div className="version-list">
+
+                                        {versions.length === 0 ? (
+                                            <div className="version-empty">
+                                                <History size={35} />
+
+                                                <h3>No versions found</h3>
+
+                                                <p>
+                                                    Upload a new version to start
+                                                    tracking changes.
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            versions.map((version) => {
+                                                const uploader = version.uploadedBy;
+
+                                                const uploaderName =
+                                                    uploader?.fullName ||
+                                                    [
+                                                        uploader?.firstName,
+                                                        uploader?.lastName
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(" ") ||
+                                                    uploader?.email ||
+                                                    "You";
+
+                                                const isCurrent = version.isCurrent;
+
+                                                return (
+                                                    <div
+                                                        className={`version-card ${isCurrent
+                                                            ? "current-version"
+                                                            : ""
+                                                            }`}
+                                                        key={version.versionNumber}
+                                                    >
+                                                        <div className="version-card-main">
+
+                                                            <div className="version-icon">
+                                                                <FileText size={22} />
+                                                            </div>
+
+                                                            <div className="version-details">
+
+                                                                <div className="version-name-row">
+                                                                    <h4>
+                                                                        Version{" "}
+                                                                        {version.versionNumber}
+                                                                    </h4>
+
+                                                                    {isCurrent && (
+                                                                        <span className="current-badge">
+                                                                            CURRENT
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+
+                                                                <p className="version-filename">
+                                                                    {version.originalName}
+                                                                </p>
+
+                                                                <div className="version-meta">
+                                                                    <span>
+                                                                        {formatFileSize(
+                                                                            version.size || 0
+                                                                        )}
+                                                                    </span>
+
+                                                                    <span>
+                                                                        Uploaded by {uploaderName}
+                                                                    </span>
+
+                                                                    <span>
+                                                                        {version.createdAt
+                                                                            ? new Date(
+                                                                                version.createdAt
+                                                                            ).toLocaleString()
+                                                                            : "Date unavailable"}
+                                                                    </span>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+
+                                                        {!isCurrent && (
+                                                            <button
+                                                                className="version-restore-btn"
+                                                                onClick={() =>
+                                                                    handleRestoreVersion(
+                                                                        version.versionNumber
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    versionUploading ||
+                                                                    versionRestoring !== null
+                                                                }
+                                                            >
+                                                                {versionRestoring ===
+                                                                    version.versionNumber
+                                                                    ? "Restoring..."
+                                                                    : "Restore"}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+
+
+
 
                     <footer className="dashboard-footer">
                         CloudSpace © 2026 · Secure file storage and sharing

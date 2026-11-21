@@ -1,10 +1,15 @@
 import mongoose from "mongoose";
+
 import File from "../models/File.js";
+import FileVersion from "../models/FileVersion.js";
 import Folder from "../models/Folder.js";
+
 import cloudinary from "../config/cloudinary.js";
+
 import User from "../models/User.js";
 import Share from "../models/Share.js";
 import Favorite from "../models/Favorite.js";
+
 
 // ============================================
 // 1. GET RECYCLE BIN FILES
@@ -102,6 +107,7 @@ export const restoreFile = async (req, res) => {
     }
 };
 
+
 // ============================================
 // 3. PERMANENTLY DELETE FILE
 // ============================================
@@ -133,38 +139,82 @@ export const permanentlyDeleteFile = async (req, res) => {
             });
         }
 
-        // Determine Cloudinary resource type
-        let resourceType = file.resourceType;
+        // Get all previous versions
+        const previousVersions = await FileVersion.find({
+            file: file._id
+        });
 
-        if (!["image", "video", "raw"].includes(resourceType)) {
-            resourceType = file.mimeType.startsWith("video/")
-                ? "video"
-                : file.mimeType.startsWith("image/")
-                    ? "image"
-                    : "raw";
-        }
+        // Combine current file and previous versions
+        const allVersions = [
+            file,
+            ...previousVersions
+        ];
 
-        // Determine delivery type
-        const deliveryType = file.deliveryType || "upload";
+        // Remove duplicate Cloudinary assets.
+        // Restoring a version can cause multiple records
+        // to reference the same Cloudinary asset.
+        const uniqueAssets = new Map();
 
-        // Permanently delete from Cloudinary
-        const cloudinaryResult = await cloudinary.uploader.destroy(
-            file.cloudinaryId,
-            {
-                resource_type: resourceType,
-                type: deliveryType
+        allVersions.forEach((version, index) => {
+            const assetKey = version.cloudinaryId
+                ? version.cloudinaryId
+                : `${version._id || index}`;
+
+            if (!uniqueAssets.has(assetKey)) {
+                uniqueAssets.set(assetKey, version);
             }
+        });
+
+        const assetsToDelete = Array.from(
+            uniqueAssets.values()
         );
 
-        // Verify Cloudinary deletion
-        if (
-            cloudinaryResult.result !== "ok" &&
-            cloudinaryResult.result !== "not found"
-        ) {
-            return res.status(500).json({
-                success: false,
-                message: "Unable to permanently delete file from cloud storage."
-            });
+        // Calculate total storage occupied by unique assets
+        const totalDeletedStorage = assetsToDelete.reduce(
+            (total, asset) => total + (asset.size || 0),
+            0
+        );
+
+        // Delete every unique version from Cloudinary
+        for (const asset of assetsToDelete) {
+
+            // Skip records without a Cloudinary ID
+            if (!asset.cloudinaryId) {
+                continue;
+            }
+
+            let resourceType = asset.resourceType;
+
+            if (!["image", "video", "raw"].includes(resourceType)) {
+                const mimeType = asset.mimeType || "";
+
+                resourceType = mimeType.startsWith("video/")
+                    ? "video"
+                    : mimeType.startsWith("image/")
+                        ? "image"
+                        : "raw";
+            }
+
+            const deliveryType = asset.deliveryType || "upload";
+
+            const result = await cloudinary.uploader.destroy(
+                asset.cloudinaryId,
+                {
+                    resource_type: resourceType,
+                    type: deliveryType
+                }
+            );
+
+            // Accept successful deletion or an already missing asset
+            if (
+                result.result !== "ok" &&
+                result.result !== "not found"
+            ) {
+                return res.status(500).json({
+                    success: false,
+                    message: "Unable to delete all file versions from cloud storage."
+                });
+            }
         }
 
         // Remove associated sharing records
@@ -177,18 +227,29 @@ export const permanentlyDeleteFile = async (req, res) => {
             file: file._id
         });
 
-        // Delete database record
+        // Remove all historical version records
+        await FileVersion.deleteMany({
+            file: file._id
+        });
+
+        // Delete original file database record
         await file.deleteOne();
 
-        // Decrease storage usage
-        await User.updateOne(
-            { _id: userId },
-            { $inc: { storageUsed: -file.size } }
-        );
+        // Update user's storage usage
+        const user = await User.findById(userId);
+
+        if (user) {
+            user.storageUsed = Math.max(
+                0,
+                user.storageUsed - totalDeletedStorage
+            );
+
+            await user.save();
+        }
 
         return res.status(200).json({
             success: true,
-            message: "File permanently deleted successfully!"
+            message: "File and all its versions permanently deleted successfully!"
         });
 
     } catch (error) {

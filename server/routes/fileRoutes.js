@@ -8,19 +8,20 @@ import {
 } from "../controllers/fileController.js";
 
 import {
-    getFileAccessUrl
-} from "../controllers/fileAccessController.js";
+    uploadNewVersion,
+    getVersionHistory,
+    restoreVersion
+} from "../controllers/versionController.js";
 
-import {
-    getStorageOverview
-} from "../controllers/storageController.js";
+import { getFileAccessUrl } from "../controllers/fileAccessController.js";
+import { getStorageOverview } from "../controllers/storageController.js";
 
 import upload from "../middleware/uploadMiddleware.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Upload a file
+// Upload a new file
 router.post(
     "/upload",
     authMiddleware,
@@ -28,39 +29,41 @@ router.post(
     uploadFile
 );
 
-// Get user's files
-router.get(
-    "/",
+// Upload a new version of an existing file
+router.post(
+    "/:fileId/versions",
     authMiddleware,
-    getUserFiles
+    upload.single("file"),
+    uploadNewVersion
 );
+
+// Get file version history
+router.get(
+    "/:fileId/versions",
+    authMiddleware,
+    getVersionHistory
+);
+
+// Restore a previous file version
+router.post(
+    "/:fileId/versions/:versionNumber/restore",
+    authMiddleware,
+    restoreVersion
+);
+
+// Get all user files
+router.get("/", authMiddleware, getUserFiles);
 
 // Get storage overview
-router.get(
-    "/storage",
-    authMiddleware,
-    getStorageOverview
-);
+router.get("/storage", authMiddleware, getStorageOverview);
 
 // Move a file
-router.put(
-    "/:fileId/move",
-    authMiddleware,
-    moveFile
-);
+router.put("/:fileId/move", authMiddleware, moveFile);
 
-// Get authorized file access URL
-router.get(
-    "/:fileId/access",
-    authMiddleware,
-    getFileAccessUrl
-);
+// Get file access URL
+router.get("/:fileId/access", authMiddleware, getFileAccessUrl);
 
 // Delete a file
-router.delete(
-    "/:fileId",
-    authMiddleware,
-    deleteFile
-);
+router.delete("/:fileId", authMiddleware, deleteFile);
 
 export default router;

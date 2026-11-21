@@ -1532,3 +1532,318 @@ html[data-theme="dark"] .recycle-bin-notice {
     border-color: rgba(245, 158, 11, 0.25);
     color: #fbbf24;
 }
+
+/* =========================================
+   FILE VERSION HISTORY MODAL
+========================================= */
+
+.version-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.version-modal {
+    width: 100%;
+    max-width: 650px;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    color: var(--text-primary, #1f2937);
+}
+
+.version-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 22px;
+}
+
+.version-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.version-modal-title > svg {
+    color: var(--accent-color, #6366f1);
+}
+
+.version-modal-title h2 {
+    font-size: 21px;
+    margin: 0 0 5px;
+}
+
+.version-modal-title p {
+    font-size: 13px;
+    color: var(--text-secondary, #6b7280);
+    margin: 0;
+}
+
+.version-close-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary, #6b7280);
+    cursor: pointer;
+    padding: 7px;
+    border-radius: 8px;
+}
+
+.version-close-btn:hover {
+    background: var(--hover-bg, #f3f4f6);
+}
+
+.version-file-info {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 15px;
+    border-radius: 10px;
+    background: var(--hover-bg, #f8fafc);
+    margin-bottom: 18px;
+}
+
+.version-file-info > svg {
+    flex-shrink: 0;
+    color: var(--accent-color, #6366f1);
+}
+
+.version-file-info h3 {
+    font-size: 15px;
+    margin: 0 0 5px;
+    overflow-wrap: anywhere;
+}
+
+.version-file-info p {
+    font-size: 12px;
+    color: var(--text-secondary, #6b7280);
+    margin: 0;
+}
+
+.version-upload-btn {
+    width: 100%;
+    min-height: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border: none;
+    border-radius: 9px;
+    background: var(--accent-color, #6366f1);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: opacity 0.2s ease;
+}
+
+.version-upload-btn:hover {
+    opacity: 0.9;
+}
+
+.version-upload-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.version-error {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    background: #fef2f2;
+    color: #dc2626;
+    font-size: 13px;
+}
+
+.version-loading {
+    min-height: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-secondary, #6b7280);
+    font-size: 13px;
+}
+
+.version-loading .spin {
+    animation: versionSpin 1s linear infinite;
+}
+
+@keyframes versionSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.version-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 3px;
+}
+
+.version-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 15px;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 11px;
+    background: var(--card-bg, #ffffff);
+}
+
+.version-card.current-version {
+    border-color: var(--accent-color, #6366f1);
+    background: var(--hover-bg, #f8fafc);
+}
+
+.version-card-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+}
+
+.version-icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: var(--hover-bg, #f3f4f6);
+    color: var(--accent-color, #6366f1);
+}
+
+.version-details {
+    min-width: 0;
+}
+
+.version-name-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-bottom: 5px;
+}
+
+.version-name-row h4 {
+    font-size: 14px;
+    margin: 0;
+}
+
+.current-badge {
+    padding: 4px 7px;
+    border-radius: 5px;
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+}
+
+.version-filename {
+    font-size: 12px;
+    color: var(--text-secondary, #6b7280);
+    margin: 0 0 9px;
+    overflow-wrap: anywhere;
+}
+
+.version-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px 13px;
+    font-size: 11px;
+    color: var(--text-secondary, #6b7280);
+}
+
+.version-restore-btn {
+    flex-shrink: 0;
+    padding: 8px 13px;
+    border: 1px solid var(--accent-color, #6366f1);
+    border-radius: 7px;
+    background: transparent;
+    color: var(--accent-color, #6366f1);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.version-restore-btn:hover {
+    background: var(--accent-color, #6366f1);
+    color: #ffffff;
+}
+
+.version-restore-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.version-empty {
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: var(--text-secondary, #6b7280);
+}
+
+.version-empty svg {
+    margin-bottom: 12px;
+    opacity: 0.6;
+}
+
+.version-empty h3 {
+    color: var(--text-primary, #1f2937);
+    font-size: 15px;
+    margin: 0 0 7px;
+}
+
+.version-empty p {
+    font-size: 12px;
+    margin: 0;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 600px) {
+    .version-modal {
+        padding: 18px;
+        max-height: 90vh;
+    }
+
+    .version-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .version-restore-btn {
+        align-self: flex-end;
+    }
+
+    .version-meta {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
