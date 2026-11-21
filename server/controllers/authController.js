@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import sendEmail from "../utils/sendEmail.js";
 import { createSession } from "../utils/sessionUtils.js";
+import { createSecurityNotification } from "../utils/securityNotificationUtils.js";
 import Session from "../models/Session.js";
 import LoginActivity from "../models/LoginActivity.js";
 
@@ -550,7 +551,8 @@ export const loginUser = async (req, res) => {
 
         // Create a new session
         const session = await createSession(user._id, req);
-
+        // Generate security notification for a new device
+        await createSecurityNotification(user, session);
         // Generate JWT with userId and sessionId
         const token = jwt.sign(
             {
@@ -687,7 +689,8 @@ export const verifyLoginOtp = async (req, res) => {
         // Generate JWT only after successful verification
         // Create a new session after successful OTP verification
         const session = await createSession(user._id, req);
-
+        // Generate security notification for a new device
+        await createSecurityNotification(user, session);
         // Generate JWT with userId and sessionId
         const token = jwt.sign(
             {

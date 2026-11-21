@@ -18,45 +18,33 @@ const detectDevice = (userAgent) => {
     return "Desktop";
 };
 
-
 // ============================================
 // BROWSER DETECTION
 // ============================================
 
-const detectBrowser = (userAgent) => {
-    if (/Edg/i.test(userAgent)) {
-        return "Microsoft Edge";
-    }
+const detectBrowser = (userAgent, clientBrowser) => {
 
-    if (/OPR|Opera/i.test(userAgent)) {
-        return "Opera";
-    }
+    // Detect browsers identified by the frontend
+    if (clientBrowser === "Brave") return "Brave";
+    if (clientBrowser === "Vivaldi") return "Vivaldi";
 
-    if (/SamsungBrowser/i.test(userAgent)) {
-        return "Samsung Internet";
-    }
-
-    if (/Firefox/i.test(userAgent)) {
-        return "Mozilla Firefox";
-    }
-
-    if (/Chrome/i.test(userAgent)) {
-        return "Google Chrome";
-    }
-
-    if (/Safari/i.test(userAgent)) {
-        return "Safari";
-    }
+    // Detect browsers using User-Agent
+    if (/Edg/i.test(userAgent)) return "Microsoft Edge";
+    if (/OPR|Opera/i.test(userAgent)) return "Opera";
+    if (/SamsungBrowser/i.test(userAgent)) return "Samsung Internet";
+    if (/Firefox/i.test(userAgent)) return "Mozilla Firefox";
+    if (/Chrome/i.test(userAgent)) return "Google Chrome";
+    if (/Safari/i.test(userAgent)) return "Safari";
 
     return "Unknown";
 };
-
 
 // ============================================
 // OPERATING SYSTEM DETECTION
 // ============================================
 
 const detectOperatingSystem = (userAgent) => {
+
     if (/Windows/i.test(userAgent)) {
         return "Windows";
     }
@@ -79,24 +67,58 @@ const detectOperatingSystem = (userAgent) => {
 
     return "Unknown";
 };
+
+// ============================================
+// NEW DEVICE DETECTION
+// ============================================
+
+export const isNewDevice = async (
+    userId,
+    device,
+    browser,
+    operatingSystem
+) => {
+
+    const existingSession = await Session.findOne({
+        userId,
+        device,
+        browser,
+        operatingSystem
+    }).select("_id");
+
+    return !existingSession;
+};
+
+// ============================================
+// CREATE SESSION
+// ============================================
+
 export const createSession = async (userId, req) => {
 
-
     try {
-        // Generate a unique session ID
+
         const sessionId = crypto.randomUUID();
 
-        // Set session expiry to 7 days
+        // Session expires after 7 days
         const expiresAt = new Date(
             Date.now() + 7 * 24 * 60 * 60 * 1000
         );
 
-        // Get browser information
+        // Get user agent
         const userAgent = req.headers["user-agent"] || "Unknown";
-        // Detect device, browser and operating system
-const device = detectDevice(userAgent);
-const browser = detectBrowser(userAgent);
-const operatingSystem = detectOperatingSystem(userAgent);
+
+        // Get browser identification from frontend
+        const clientBrowser = req.headers["x-client-browser"];
+
+        // Detect device information
+        const device = detectDevice(userAgent);
+
+        const browser = detectBrowser(
+            userAgent,
+            clientBrowser
+        );
+
+        const operatingSystem = detectOperatingSystem(userAgent);
 
         // Get IP address
         const ipAddress =
@@ -104,36 +126,48 @@ const operatingSystem = detectOperatingSystem(userAgent);
             req.socket.remoteAddress ||
             "Unknown";
 
-        // Create session in MongoDB
-       // Create session in MongoDB
-const session = await Session.create({
-    userId,
-    sessionId,
-    userAgent,
-    ipAddress,
-    device,
-    browser,
-    operatingSystem,
-    expiresAt
-});
+        // Check whether this device has logged in before
+        const isNew = await isNewDevice(
+            userId,
+            device,
+            browser,
+            operatingSystem
+        );
 
-// Record successful login activity
-await LoginActivity.create({
-    userId,
-    sessionId,
-    event: "login",
-    userAgent,
-    ipAddress,
-    device,
-    browser,
-    operatingSystem,
-    details: "Successful login."
-});
+        // Create session
+        const session = await Session.create({
+            userId,
+            sessionId,
+            userAgent,
+            ipAddress,
+            device,
+            browser,
+            operatingSystem,
+            expiresAt
+        });
 
-return session;
+        // Record successful login
+        await LoginActivity.create({
+            userId,
+            sessionId,
+            event: "login",
+            userAgent,
+            ipAddress,
+            device,
+            browser,
+            operatingSystem,
+            details: "Successful login."
+        });
+
+        // Attach detection result to returned document
+        session.$locals.isNewDevice = isNew;
+
+        return session;
 
     } catch (error) {
+
         console.error("Session creation error:", error);
+
         throw error;
     }
 };
