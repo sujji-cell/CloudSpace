@@ -20,7 +20,8 @@ const loginActivitySchema = new mongoose.Schema(
                 "login",
                 "logout",
                 "session_revoked",
-                "login_failed"
+                "login_failed",
+                "suspicious_login_alert"
             ],
             required: true
         },

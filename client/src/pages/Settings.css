@@ -2169,6 +2169,18 @@ html[data-theme="dark"] .appearance-radio-options label:hover {
 
 }
 
+/* Suspicious Login Activity */
+
+.login-history-icon.suspicious_login_alert {
+
+    color: #9333ea;
+
+    background: rgba(147, 51, 234, 0.10);
+
+    border-color: rgba(147, 51, 234, 0.22);
+
+}
+
 /* Session Revoked */
 
 .login-history-icon.session_revoked {

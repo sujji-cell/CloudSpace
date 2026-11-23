@@ -102,7 +102,8 @@ const getEventLabel = (event) => {
         login: "Successful Login",
         logout: "Logout",
         session_revoked: "Session Revoked",
-        login_failed: "Failed Login"
+        login_failed: "Failed Login Attempt",
+        suspicious_login_alert: "Suspicious Login Activity"
     };
 
     return labels[event] || "Account Activity";
@@ -1471,6 +1472,8 @@ function Settings() {
                                                     <CheckCircle2 size={19} />
                                                 ) : activity.event === "login_failed" ? (
                                                     <XCircle size={19} />
+                                                ) : activity.event === "suspicious_login_alert" ? (
+                                                    <ShieldAlert size={19} />
                                                 ) : activity.event === "session_revoked" ? (
                                                     <ShieldAlert size={19} />
                                                 ) : (
@@ -1494,11 +1497,24 @@ function Settings() {
 
                                                 <div className="login-history-meta">
 
-                                                    <span>
-                                                        {activity.device || "Unknown device"}
-                                                    </span>
+                                                    {activity.device &&
+                                                        activity.device !== "Unknown" && (
+                                                            <span>
+                                                                {activity.device}
+                                                            </span>
+                                                        )
+                                                    }
+
+                                                    {activity.browser &&
+                                                        activity.browser !== "Unknown" && (
+                                                            <span>
+                                                                {activity.browser}
+                                                            </span>
+                                                        )
+                                                    }
 
                                                     <span>
+                                                        <Globe size={13} />
                                                         {activity.ipAddress || "Unknown IP"}
                                                     </span>
 
@@ -1798,11 +1814,10 @@ function Settings() {
                                             <button
                                                 key={item.value}
                                                 type="button"
-                                                className={`appearance-choice-card ${
-                                                    appearancePreferences.theme === item.value
-                                                        ? "active"
-                                                        : ""
-                                                }`}
+                                                className={`appearance-choice-card ${appearancePreferences.theme === item.value
+                                                    ? "active"
+                                                    : ""
+                                                    }`}
                                                 onClick={() =>
                                                     handleAppearanceChange("theme", item.value)
                                                 }
@@ -1847,11 +1862,10 @@ function Settings() {
                                             <button
                                                 key={item.name}
                                                 type="button"
-                                                className={`appearance-color-option ${
-                                                    appearancePreferences.accentColor === item.name
-                                                        ? "active"
-                                                        : ""
-                                                }`}
+                                                className={`appearance-color-option ${appearancePreferences.accentColor === item.name
+                                                    ? "active"
+                                                    : ""
+                                                    }`}
                                                 onClick={() =>
                                                     handleAppearanceChange("accentColor", item.name)
                                                 }

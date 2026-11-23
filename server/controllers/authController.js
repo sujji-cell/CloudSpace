@@ -4,9 +4,145 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import sendEmail from "../utils/sendEmail.js";
 import { createSession } from "../utils/sessionUtils.js";
-import { createSecurityNotification } from "../utils/securityNotificationUtils.js";
+import {
+    createSecurityNotification,
+    createSuspiciousLoginNotification
+} from "../utils/securityNotificationUtils.js";
 import Session from "../models/Session.js";
 import LoginActivity from "../models/LoginActivity.js";
+
+
+// ============================================
+// GET CLIENT IP ADDRESS
+// ============================================
+
+const getClientIp = (req) => {
+    return (
+        req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+        req.socket.remoteAddress ||
+        "Unknown"
+    );
+};
+
+const isLoginLocked = async (user, req) => {
+    try {
+        const ipAddress = getClientIp(req);
+
+        const fifteenMinutesAgo = new Date(
+            Date.now() - 15 * 60 * 1000
+        );
+
+        const failedCount = await LoginActivity.countDocuments({
+            userId: user._id,
+            event: "login_failed",
+            ipAddress,
+            createdAt: {
+                $gte: fifteenMinutesAgo
+            }
+        });
+
+        return failedCount >= 5;
+
+    } catch (error) {
+        console.error("Login lockout check error:", error);
+        throw error;
+    }
+};
+// ============================================
+// RECORD FAILED LOGIN ATTEMPTS
+// ============================================
+
+const recordFailedLogin = async (user, req) => {
+    try {
+        const ipAddress = getClientIp(req);
+
+        const userAgent =
+            req.headers["user-agent"] || "Unknown";
+
+        // 1. Record the failed login attempt
+        await LoginActivity.create({
+            userId: user._id,
+            sessionId: null,
+            event: "login_failed",
+            ipAddress,
+            userAgent,
+            details: "Incorrect password entered during login."
+        });
+
+        // 2. Calculate the 15-minute detection window
+        const fifteenMinutesAgo = new Date(
+            Date.now() - 15 * 60 * 1000
+        );
+
+        // 3. Count failed attempts from this IP
+        const failedCount = await LoginActivity.countDocuments({
+            userId: user._id,
+            event: "login_failed",
+            ipAddress,
+            createdAt: {
+                $gte: fifteenMinutesAgo
+            }
+        });
+
+        console.log(
+            `Failed login attempts: ${failedCount}`
+        );
+
+        // 4. Trigger alert only after 5 attempts
+        if (failedCount < 5) {
+            return;
+        }
+
+        // 5. Check the 30-minute alert cooldown
+        const thirtyMinutesAgo = new Date(
+            Date.now() - 30 * 60 * 1000
+        );
+
+        const existingAlert = await LoginActivity.findOne({
+            userId: user._id,
+            event: "suspicious_login_alert",
+            ipAddress,
+            createdAt: {
+                $gte: thirtyMinutesAgo
+            }
+        });
+
+        // Prevent repeated alerts during cooldown
+        if (existingAlert) {
+            console.log(
+                "Suspicious login alert is in cooldown."
+            );
+            return;
+        }
+
+        // 6. Record the alert before sending notifications
+        await LoginActivity.create({
+            userId: user._id,
+            sessionId: null,
+            event: "suspicious_login_alert",
+            ipAddress,
+            userAgent,
+            details: `Suspicious login detected after ${failedCount} failed attempts.`
+        });
+
+        console.log(
+            "Suspicious login activity detected!"
+        );
+
+        // 7. Send in-app and email notifications
+        await createSuspiciousLoginNotification(
+            user,
+            ipAddress,
+            failedCount
+        );
+
+    } catch (error) {
+        console.error(
+            "Failed login activity recording error:",
+            error
+        );
+    }
+};
 
 // ==========================================
 // REGISTER USER
@@ -434,12 +570,25 @@ export const loginUser = async (req, res) => {
             });
         }
 
+        // Check whether login is temporarily locked
+const isLocked = await isLoginLocked(user, req);
+
+if (isLocked) {
+    return res.status(429).json({
+        success: false,
+        message: "Too many failed login attempts. Please try again later."
+    });
+}
+
         const isPasswordCorrect = await bcrypt.compare(
             password,
             user.password
         );
 
         if (!isPasswordCorrect) {
+
+            await recordFailedLogin(user, req);
+
             return res.status(401).json({
                 success: false,
                 message: "Invalid email or password."
