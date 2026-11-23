@@ -847,7 +847,10 @@ function Settings() {
                     {/* PROFILE SETTINGS */}
                     {/* ================================== */}
 
-                    <div className="settings-section">
+                    <div
+                        className="settings-section"
+                        id="profile-settings"
+                    >
 
                         <div className="settings-section-heading">
                             <div>
@@ -948,7 +951,10 @@ function Settings() {
                     {/* SECURITY SETTINGS */}
                     {/* ================================== */}
 
-                    <div className="settings-section security-section">
+                    <div
+                        className="settings-section security-section"
+                        id="security-settings"
+                    >
 
                         <div className="settings-section-heading">
 

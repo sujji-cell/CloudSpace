@@ -27,12 +27,17 @@ export const addFavorite = async (req, res) => {
         const file = await File.findById(fileId);
 
         if (!file) {
-
             return res.status(404).json({
                 success: false,
                 message: "File not found."
             });
+        }
 
+        if (file.isDeleted) {
+            return res.status(410).json({
+                success: false,
+                message: "Cannot favourite a file in the Recycle Bin."
+            });
         }
 
         // Check ownership
@@ -90,7 +95,12 @@ export const addFavorite = async (req, res) => {
     } catch (error) {
 
         console.error("Add Favorite Error:", error);
-
+          if (error.code === 11000) {
+    return res.status(200).json({
+        success: true,
+        message: "File is already in favourites."
+    });
+}
         return res.status(500).json({
             success: false,
             message: "Unable to add file to favourites."
@@ -123,6 +133,9 @@ export const getFavorites = async (req, res) => {
             const file = favorite.file;
 
             if (!file) {
+                continue;
+            }
+            if (file.isDeleted) {
                 continue;
             }
 

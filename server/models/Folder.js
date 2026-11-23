@@ -6,7 +6,9 @@ const folderSchema = new mongoose.Schema(
         name: {
             type: String,
             required: true,
-            trim: true
+            trim: true,
+            minlength: [1, "Folder name cannot be empty."],
+            maxlength: [100, "Folder name cannot exceed 100 characters."]
         },
 
         // Folder owner

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Sidebar from "../components/Sidebar";
@@ -37,11 +37,11 @@ function SharedFiles() {
     const [favoriteUpdatingId, setFavoriteUpdatingId] = useState(null);
 
 
-    // --------------------------------
+    // ============================================
     // FETCH SHARED FILES
-    // --------------------------------
+    // ============================================
 
-    const fetchSharedFiles = async () => {
+    const fetchSharedFiles = useCallback(async () => {
 
         try {
 
@@ -63,7 +63,10 @@ function SharedFiles() {
 
         } catch (err) {
 
-            console.error("Error fetching shared files:", err);
+            console.error(
+                "Error fetching shared files:",
+                err
+            );
 
             setError(
                 err.response?.data?.message ||
@@ -76,14 +79,14 @@ function SharedFiles() {
 
         }
 
-    };
+    }, []);
 
 
-    // --------------------------------
+    // ============================================
     // FETCH FAVOURITES
-    // --------------------------------
+    // ============================================
 
-    const fetchFavorites = async () => {
+    const fetchFavorites = useCallback(async () => {
 
         try {
 
@@ -97,30 +100,49 @@ function SharedFiles() {
 
         } catch (error) {
 
-            console.error("Unable to fetch favourites:", error);
+            console.error(
+                "Unable to fetch favourites:",
+                error
+            );
 
         }
 
-    };
+    }, []);
 
 
-    // --------------------------------
+    // ============================================
     // INITIAL FETCH
-    // --------------------------------
+    // ============================================
 
     useEffect(() => {
 
         fetchSharedFiles();
         fetchFavorites();
 
-    }, []);
+    }, [fetchSharedFiles, fetchFavorites]);
 
 
-    // --------------------------------
+    // ============================================
+    // REFRESH ALL DATA
+    // ============================================
+
+    const handleRefresh = async () => {
+
+        await Promise.all([
+            fetchSharedFiles(),
+            fetchFavorites()
+        ]);
+
+    };
+
+
+    // ============================================
     // ADD / REMOVE FAVOURITE
-    // --------------------------------
+    // ============================================
 
     const handleFavorite = async (fileId) => {
+
+        if (!fileId) return;
 
         try {
 
@@ -138,7 +160,15 @@ function SharedFiles() {
 
                 await api.post(`/favorites/${fileId}`);
 
-                setFavoriteIds((previous) => [...previous, fileId]);
+                setFavoriteIds((previous) => {
+
+                    if (previous.includes(fileId)) {
+                        return previous;
+                    }
+
+                    return [...previous, fileId];
+
+                });
 
             }
 
@@ -148,7 +178,10 @@ function SharedFiles() {
 
         } catch (error) {
 
-            console.error("Favourite error:", error);
+            console.error(
+                "Favourite error:",
+                error
+            );
 
             alert(
                 error.response?.data?.message ||
@@ -164,15 +197,15 @@ function SharedFiles() {
     };
 
 
-    // --------------------------------
+    // ============================================
     // GET FILE SIZE
-    // --------------------------------
+    // ============================================
 
     const formatFileSize = (bytes) => {
 
-        if (!bytes) return "0 B";
+        if (!bytes || bytes <= 0) return "0 B";
 
-        const sizes = ["B", "KB", "MB", "GB"];
+        const sizes = ["B", "KB", "MB", "GB", "TB"];
 
         const index = Math.min(
             Math.floor(Math.log(bytes) / Math.log(1024)),
@@ -188,15 +221,21 @@ function SharedFiles() {
     };
 
 
-    // --------------------------------
+    // ============================================
     // FORMAT DATE
-    // --------------------------------
+    // ============================================
 
     const formatDate = (date) => {
 
         if (!date) return "N/A";
 
-        return new Date(date).toLocaleDateString("en-IN", {
+        const parsedDate = new Date(date);
+
+        if (Number.isNaN(parsedDate.getTime())) {
+            return "N/A";
+        }
+
+        return parsedDate.toLocaleDateString("en-IN", {
             day: "numeric",
             month: "short",
             year: "numeric"
@@ -205,28 +244,62 @@ function SharedFiles() {
     };
 
 
-    // --------------------------------
-    // GET ACCESS URL
-    // --------------------------------
+    // ============================================
+    // GET FILE ACCESS URL
+    // ============================================
 
     const getFileAccessUrl = async (fileId) => {
 
-        const response = await api.get(`/files/${fileId}/access`);
+        if (!fileId) {
+            throw new Error("Invalid file ID.");
+        }
 
-        return (
+        const response = await api.get(
+            `/files/${fileId}/access`
+        );
+
+        const url =
             response.data.url ||
             response.data.fileUrl ||
-            response.data.accessUrl
-        );
+            response.data.accessUrl;
+
+        if (!url) {
+            throw new Error(
+                "File access URL was not returned."
+            );
+        }
+
+        return url;
 
     };
 
 
-    // --------------------------------
+    // ============================================
     // PREVIEW FILE
-    // --------------------------------
+    // ============================================
 
     const handlePreview = async (fileId) => {
+
+        if (!fileId) {
+            alert("File information is unavailable.");
+            return;
+        }
+
+        // Open a tab immediately to avoid popup blocking
+        const newTab = window.open(
+            "about:blank",
+            "_blank"
+        );
+
+        if (!newTab) {
+
+            alert(
+                "Please allow popups to preview files."
+            );
+
+            return;
+
+        }
 
         try {
 
@@ -234,15 +307,17 @@ function SharedFiles() {
 
             const url = await getFileAccessUrl(fileId);
 
-            if (!url) {
-                throw new Error("File access URL was not returned.");
-            }
-
-            window.open(url, "_blank", "noopener,noreferrer");
+            newTab.opener = null;
+            newTab.location.href = url;
 
         } catch (err) {
 
-            console.error("Preview error:", err);
+            newTab.close();
+
+            console.error(
+                "Preview error:",
+                err
+            );
 
             alert(
                 err.response?.data?.message ||
@@ -259,15 +334,16 @@ function SharedFiles() {
     };
 
 
-    // --------------------------------
+    // ============================================
     // DOWNLOAD FILE
-    // --------------------------------
-
-    // --------------------------------
-    // DOWNLOAD FILE
-    // --------------------------------
+    // ============================================
 
     const handleDownload = async (fileId, fileName) => {
+
+        if (!fileId) {
+            alert("File information is unavailable.");
+            return;
+        }
 
         try {
 
@@ -275,24 +351,18 @@ function SharedFiles() {
 
             const url = await getFileAccessUrl(fileId);
 
-            if (!url) {
-                throw new Error("File access URL was not returned.");
-            }
-
-            // Fetch the actual file
             const response = await fetch(url);
 
             if (!response.ok) {
-                throw new Error("Unable to download file.");
+                throw new Error(
+                    "Unable to download file."
+                );
             }
 
-            // Convert response into a Blob
             const blob = await response.blob();
 
-            // Create a temporary download URL
             const downloadUrl = window.URL.createObjectURL(blob);
 
-            // Create download link
             const link = document.createElement("a");
 
             link.href = downloadUrl;
@@ -300,19 +370,22 @@ function SharedFiles() {
 
             document.body.appendChild(link);
 
-            // Trigger download
             link.click();
 
-            // Clean up
             link.remove();
 
             setTimeout(() => {
+
                 window.URL.revokeObjectURL(downloadUrl);
+
             }, 1000);
 
         } catch (err) {
 
-            console.error("Download error:", err);
+            console.error(
+                "Download error:",
+                err
+            );
 
             alert(
                 err.response?.data?.message ||
@@ -328,9 +401,10 @@ function SharedFiles() {
 
     };
 
-    // --------------------------------
+
+    // ============================================
     // REVOKE FILE ACCESS
-    // --------------------------------
+    // ============================================
 
     const handleRevoke = async (shareId) => {
 
@@ -344,17 +418,26 @@ function SharedFiles() {
 
             setActionLoading(shareId);
 
-            await api.delete(`/shares/${shareId}`);
-
-            setSharedByMe((previous) =>
-                previous.filter((share) => share._id !== shareId)
+            await api.delete(
+                `/shares/${shareId}`
             );
 
-            alert("File access revoked successfully.");
+            setSharedByMe((previous) =>
+                previous.filter(
+                    (share) => share._id !== shareId
+                )
+            );
+
+            alert(
+                "File access revoked successfully."
+            );
 
         } catch (err) {
 
-            console.error("Revoke error:", err);
+            console.error(
+                "Revoke error:",
+                err
+            );
 
             alert(
                 err.response?.data?.message ||
@@ -370,9 +453,9 @@ function SharedFiles() {
     };
 
 
-    // --------------------------------
+    // ============================================
     // REMOVE FILE SHARED WITH ME
-    // --------------------------------
+    // ============================================
 
     const handleRemoveSharedFile = async (shareId) => {
 
@@ -386,17 +469,26 @@ function SharedFiles() {
 
             setActionLoading(shareId);
 
-            await api.delete(`/shares/remove/${shareId}`);
-
-            setSharedWithMe((previous) =>
-                previous.filter((share) => share._id !== shareId)
+            await api.delete(
+                `/shares/remove/${shareId}`
             );
 
-            alert("Shared file removed successfully.");
+            setSharedWithMe((previous) =>
+                previous.filter(
+                    (share) => share._id !== shareId
+                )
+            );
+
+            alert(
+                "Shared file removed successfully."
+            );
 
         } catch (err) {
 
-            console.error("Remove shared file error:", err);
+            console.error(
+                "Remove shared file error:",
+                err
+            );
 
             alert(
                 err.response?.data?.message ||
@@ -412,9 +504,9 @@ function SharedFiles() {
     };
 
 
-    // --------------------------------
+    // ============================================
     // GET FILE FROM SHARE
-    // --------------------------------
+    // ============================================
 
     const getFile = (share) => {
 
@@ -423,9 +515,9 @@ function SharedFiles() {
     };
 
 
-    // --------------------------------
+    // ============================================
     // GET PERSON DETAILS
-    // --------------------------------
+    // ============================================
 
     const getPerson = (share) => {
 
@@ -436,13 +528,19 @@ function SharedFiles() {
     };
 
 
+    // ============================================
+    // CURRENT FILE LIST
+    // ============================================
+
     const currentFiles =
-        activeTab === "by-me" ? sharedByMe : sharedWithMe;
+        activeTab === "by-me"
+            ? sharedByMe
+            : sharedWithMe;
 
 
-    // --------------------------------
+    // ============================================
     // PAGE UI
-    // --------------------------------
+    // ============================================
 
     return (
 
@@ -456,7 +554,10 @@ function SharedFiles() {
 
                 <div className="shared-files-content">
 
+
+                    {/* ================================= */}
                     {/* HEADING */}
+                    {/* ================================= */}
 
                     <div className="shared-files-heading">
 
@@ -472,20 +573,25 @@ function SharedFiles() {
 
                         <button
                             className="refresh-button"
-                            onClick={() => {
-                                fetchSharedFiles();
-                                fetchFavorites();
-                            }}
+                            onClick={handleRefresh}
                             disabled={loading}
                         >
-                            <RefreshCw size={16} />
+
+                            <RefreshCw
+                                size={16}
+                                className={loading ? "spin" : ""}
+                            />
+
                             Refresh
+
                         </button>
 
                     </div>
 
 
+                    {/* ================================= */}
                     {/* STATISTICS */}
+                    {/* ================================= */}
 
                     <div className="shared-files-stats">
 
@@ -496,8 +602,11 @@ function SharedFiles() {
                             </div>
 
                             <div>
+
                                 <h2>{sharedByMe.length}</h2>
+
                                 <p>Files I Shared</p>
+
                             </div>
 
                         </div>
@@ -510,8 +619,11 @@ function SharedFiles() {
                             </div>
 
                             <div>
+
                                 <h2>{sharedWithMe.length}</h2>
+
                                 <p>Shared With Me</p>
+
                             </div>
 
                         </div>
@@ -519,37 +631,53 @@ function SharedFiles() {
                     </div>
 
 
+                    {/* ================================= */}
                     {/* TABS */}
+                    {/* ================================= */}
 
                     <div className="shared-files-tabs">
 
                         <button
                             className={
-                                activeTab === "by-me" ? "active" : ""
+                                activeTab === "by-me"
+                                    ? "active"
+                                    : ""
                             }
                             onClick={() => setActiveTab("by-me")}
                         >
+
                             <Share2 size={17} />
+
                             Files I Shared
+
                             <span>{sharedByMe.length}</span>
+
                         </button>
 
 
                         <button
                             className={
-                                activeTab === "with-me" ? "active" : ""
+                                activeTab === "with-me"
+                                    ? "active"
+                                    : ""
                             }
                             onClick={() => setActiveTab("with-me")}
                         >
+
                             <Users size={17} />
+
                             Shared With Me
+
                             <span>{sharedWithMe.length}</span>
+
                         </button>
 
                     </div>
 
 
+                    {/* ================================= */}
                     {/* FILE LIST */}
+                    {/* ================================= */}
 
                     <div className="shared-files-list">
 
@@ -557,7 +685,10 @@ function SharedFiles() {
 
                             <div className="shared-loading">
 
-                                <RefreshCw size={24} className="spin" />
+                                <RefreshCw
+                                    size={24}
+                                    className="spin"
+                                />
 
                                 <p>Loading shared files...</p>
 
@@ -569,7 +700,7 @@ function SharedFiles() {
 
                                 <p>{error}</p>
 
-                                <button onClick={fetchSharedFiles}>
+                                <button onClick={handleRefresh}>
                                     Try Again
                                 </button>
 
@@ -582,15 +713,27 @@ function SharedFiles() {
                                 <FolderOpen size={45} />
 
                                 <h3>
+
                                     {activeTab === "by-me"
+
                                         ? "You haven't shared any files yet"
-                                        : "No files have been shared with you"}
+
+                                        : "No files have been shared with you"
+
+                                    }
+
                                 </h3>
 
                                 <p>
+
                                     {activeTab === "by-me"
+
                                         ? "Files you share with other users will appear here."
-                                        : "When someone shares a file with you, it will appear here."}
+
+                                        : "When someone shares a file with you, it will appear here."
+
+                                    }
+
                                 </p>
 
                                 <button
@@ -613,9 +756,11 @@ function SharedFiles() {
                                     <span>File</span>
 
                                     <span>
+
                                         {activeTab === "by-me"
                                             ? "Shared With"
                                             : "Shared By"}
+
                                     </span>
 
                                     <span>Date Shared</span>
@@ -637,13 +782,20 @@ function SharedFiles() {
 
                                     const fileId = file._id;
 
+                                    // Ignore missing file references
+                                    if (!fileId) {
+                                        return null;
+                                    }
+
                                     const personName = [
                                         person.firstName,
                                         person.middleName,
                                         person.lastName
                                     ]
                                         .filter(Boolean)
-                                        .join(" ") || person.email || "User";
+                                        .join(" ") ||
+                                        person.email ||
+                                        "User";
 
                                     const isFavorite =
                                         favoriteIds.includes(fileId);
@@ -683,9 +835,13 @@ function SharedFiles() {
 
                                             <div className="shared-person">
 
-                                                <strong>{personName}</strong>
+                                                <strong>
+                                                    {personName}
+                                                </strong>
 
-                                                <p>{person.email || ""}</p>
+                                                <p>
+                                                    {person.email || ""}
+                                                </p>
 
                                             </div>
 
@@ -693,14 +849,18 @@ function SharedFiles() {
                                             {/* DATE */}
 
                                             <span className="shared-date">
+
                                                 {formatDate(share.createdAt)}
+
                                             </span>
 
 
                                             {/* SIZE */}
 
                                             <span className="shared-size">
+
                                                 {formatFileSize(file.size)}
+
                                             </span>
 
 
@@ -709,7 +869,7 @@ function SharedFiles() {
                                             <div className="shared-row-actions">
 
 
-                                                {/* FAVOURITE BUTTON */}
+                                                {/* FAVOURITE */}
 
                                                 <button
                                                     className={
@@ -753,7 +913,9 @@ function SharedFiles() {
                                                         actionLoading === fileId
                                                     }
                                                 >
+
                                                     <Eye size={17} />
+
                                                 </button>
 
 
@@ -771,7 +933,9 @@ function SharedFiles() {
                                                         actionLoading === fileId
                                                     }
                                                 >
+
                                                     <Download size={17} />
+
                                                 </button>
 
 
@@ -789,10 +953,13 @@ function SharedFiles() {
                                                             actionLoading === share._id
                                                         }
                                                     >
+
                                                         <Trash2 size={17} />
+
                                                     </button>
 
                                                 )}
+
 
                                                 {/* REMOVE SHARED FILE */}
 
@@ -804,9 +971,13 @@ function SharedFiles() {
                                                         onClick={() =>
                                                             handleRemoveSharedFile(share._id)
                                                         }
-                                                        disabled={actionLoading === share._id}
+                                                        disabled={
+                                                            actionLoading === share._id
+                                                        }
                                                     >
+
                                                         <Trash2 size={17} />
+
                                                     </button>
 
                                                 )}

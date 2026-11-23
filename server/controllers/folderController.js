@@ -11,12 +11,12 @@ export const createFolder = async (req, res) => {
         const userId = req.userId;
         const { name, parentFolder } = req.body;
 
-        if (!name || !name.trim()) {
-            return res.status(400).json({
-                success: false,
-                message: "Folder name is required."
-            });
-        }
+        if (name.trim().length > 100) {
+    return res.status(400).json({
+        success: false,
+        message: "Folder name cannot exceed 100 characters."
+    });
+}
 
         // Validate parent folder if provided
         if (parentFolder) {
@@ -116,13 +116,12 @@ export const renameFolder = async (req, res) => {
             });
         }
 
-        if (!name || !name.trim()) {
+        if (typeof name !== "string" || !name.trim()) {
             return res.status(400).json({
                 success: false,
                 message: "Folder name is required."
             });
         }
-
         const folder = await Folder.findOneAndUpdate(
             {
                 _id: folderId,
@@ -132,9 +131,9 @@ export const renameFolder = async (req, res) => {
                 $set: { name: name.trim() }
             },
             {
-    returnDocument: "after",
-    runValidators: true
-}
+                returnDocument: "after",
+                runValidators: true
+            }
         );
 
         if (!folder) {

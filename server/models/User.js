@@ -74,31 +74,35 @@ const userSchema = new mongoose.Schema(
     {
         // First Name - Required
         firstName: {
-            type: String,
-            required: [true, "First name is required"],
-            trim: true
-        },
+    type: String,
+    required: [true, "First name is required"],
+    trim: true,
+    maxlength: [50, "First name cannot exceed 50 characters"]
+},
 
         // Middle Name - Optional
         middleName: {
-            type: String,
-            trim: true,
-            default: ""
-        },
+    type: String,
+    trim: true,
+    default: "",
+    maxlength: [50, "Middle name cannot exceed 50 characters"]
+},
 
         // Last Name - Optional
         lastName: {
-            type: String,
-            trim: true,
-            default: ""
-        },
+    type: String,
+    trim: true,
+    default: "",
+    maxlength: [50, "Last name cannot exceed 50 characters"]
+},
 
         // Full Name
         name: {
-            type: String,
-            required: true,
-            trim: true
-        },
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: [160, "Full name cannot exceed 160 characters"]
+},
 
         // User's Email
         email: {

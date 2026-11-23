@@ -33,6 +33,7 @@ function Register() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
+
     // Handle input changes
     const handleChange = (e) => {
 
@@ -48,7 +49,9 @@ function Register() {
         }
 
         setError("");
+
     };
+
 
     // Handle registration
     const handleSubmit = async (e) => {
@@ -128,23 +131,30 @@ function Register() {
             setLoading(false);
 
         }
+
     };
+
 
     return (
 
         <div className="auth-page">
 
-            <div className="auth-card">
+            {/* BRAND */}
 
-                {/* Logo */}
+            <div className="auth-logo">
 
-                <div className="auth-logo">
-
-                    <Cloud size={35} />
-
-                    <h2>CloudSpace</h2>
-
+                <div className="auth-logo-icon">
+                    <Cloud size={28} />
                 </div>
+
+                <h2>CloudSpace</h2>
+
+            </div>
+
+
+            {/* REGISTRATION CARD */}
+
+            <div className="auth-card">
 
                 <h1>Create Account</h1>
 
@@ -152,55 +162,65 @@ function Register() {
                     Create your account and start managing your files.
                 </p>
 
+
                 <form onSubmit={handleSubmit}>
 
-                    {/* First Name and Middle Name */}
+                    {/* FIRST NAME AND MIDDLE NAME */}
 
                     <div className="auth-name-row">
 
                         <div className="auth-input-group">
 
-                            <label>First Name *</label>
+                            <label htmlFor="firstName">
+                                First Name *
+                            </label>
 
                             <div className="auth-input-wrapper">
 
                                 <User size={18} />
 
                                 <input
+                                    id="firstName"
                                     type="text"
                                     name="firstName"
                                     placeholder="First name"
                                     value={formData.firstName}
                                     onChange={handleChange}
                                     autoComplete="given-name"
+                                    maxLength={50}
                                     required
                                 />
 
                             </div>
 
                             {firstNameError && (
-                                <p className="auth-error">
+                                <p className="auth-error" role="alert">
                                     {firstNameError}
                                 </p>
                             )}
 
                         </div>
 
+
                         <div className="auth-input-group">
 
-                            <label>Middle Name</label>
+                            <label htmlFor="middleName">
+                                Middle Name
+                            </label>
 
                             <div className="auth-input-wrapper">
 
                                 <User size={18} />
 
                                 <input
+                                    id="middleName"
                                     type="text"
                                     name="middleName"
                                     placeholder="Middle name"
                                     value={formData.middleName}
                                     onChange={handleChange}
                                     autoComplete="additional-name"
+                                    maxLength={50}
                                 />
 
                             </div>
@@ -209,46 +229,56 @@ function Register() {
 
                     </div>
 
-                    {/* Last Name */}
+
+                    {/* LAST NAME */}
 
                     <div className="auth-input-group">
 
-                        <label>Last Name</label>
+                        <label htmlFor="lastName">
+                            Last Name
+                        </label>
 
                         <div className="auth-input-wrapper">
 
                             <User size={18} />
 
                             <input
+                                id="lastName"
                                 type="text"
                                 name="lastName"
                                 placeholder="Enter your last name"
                                 value={formData.lastName}
                                 onChange={handleChange}
                                 autoComplete="family-name"
+                                maxLength={50}
                             />
 
                         </div>
 
                     </div>
 
-                    {/* Email */}
+
+                    {/* EMAIL */}
 
                     <div className="auth-input-group">
 
-                        <label>Email Address *</label>
+                        <label htmlFor="email">
+                            Email Address *
+                        </label>
 
                         <div className="auth-input-wrapper">
 
                             <Mail size={18} />
 
                             <input
+                                id="email"
                                 type="email"
                                 name="email"
-                                placeholder="Enter your email"
+                                placeholder="you@example.com"
                                 value={formData.email}
                                 onChange={handleChange}
                                 autoComplete="email"
+                                maxLength={254}
                                 required
                             />
 
@@ -256,23 +286,28 @@ function Register() {
 
                     </div>
 
-                    {/* Password */}
+
+                    {/* PASSWORD */}
 
                     <div className="auth-input-group">
 
-                        <label>Password *</label>
+                        <label htmlFor="password">
+                            Password *
+                        </label>
 
                         <div className="auth-input-wrapper">
 
                             <Lock size={18} />
 
                             <input
+                                id="password"
                                 type={showPassword ? "text" : "password"}
                                 name="password"
                                 placeholder="Create a password"
                                 value={formData.password}
                                 onChange={handleChange}
                                 autoComplete="new-password"
+                                minLength={8}
                                 required
                             />
 
@@ -282,13 +317,17 @@ function Register() {
                                 onClick={() =>
                                     setShowPassword(!showPassword)
                                 }
+                                aria-label={
+                                    showPassword
+                                        ? "Hide password"
+                                        : "Show password"
+                                }
                             >
 
-                                {showPassword ? (
-                                    <EyeOff size={18} />
-                                ) : (
-                                    <Eye size={18} />
-                                )}
+                                {showPassword
+                                    ? <EyeOff size={18} />
+                                    : <Eye size={18} />
+                                }
 
                             </button>
 
@@ -296,17 +335,21 @@ function Register() {
 
                     </div>
 
-                    {/* Confirm Password */}
+
+                    {/* CONFIRM PASSWORD */}
 
                     <div className="auth-input-group">
 
-                        <label>Confirm Password *</label>
+                        <label htmlFor="confirmPassword">
+                            Confirm Password *
+                        </label>
 
                         <div className="auth-input-wrapper">
 
                             <Lock size={18} />
 
                             <input
+                                id="confirmPassword"
                                 type={showConfirmPassword ? "text" : "password"}
                                 name="confirmPassword"
                                 placeholder="Confirm your password"
@@ -322,13 +365,17 @@ function Register() {
                                 onClick={() =>
                                     setShowConfirmPassword(!showConfirmPassword)
                                 }
+                                aria-label={
+                                    showConfirmPassword
+                                        ? "Hide confirm password"
+                                        : "Show confirm password"
+                                }
                             >
 
-                                {showConfirmPassword ? (
-                                    <EyeOff size={18} />
-                                ) : (
-                                    <Eye size={18} />
-                                )}
+                                {showConfirmPassword
+                                    ? <EyeOff size={18} />
+                                    : <Eye size={18} />
+                                }
 
                             </button>
 
@@ -336,15 +383,19 @@ function Register() {
 
                     </div>
 
-                    {/* General Error */}
+
+                    {/* GENERAL ERROR */}
 
                     {error && (
-                        <p className="auth-error">
+
+                        <p className="auth-error" role="alert">
                             {error}
                         </p>
+
                     )}
 
-                    {/* Submit Button */}
+
+                    {/* SUBMIT BUTTON */}
 
                     <button
                         type="submit"
@@ -361,19 +412,27 @@ function Register() {
 
                 </form>
 
-                {/* Login Link */}
+
+                {/* LOGIN LINK */}
 
                 <p className="auth-footer">
 
                     Already have an account?{" "}
 
                     <Link to="/login">
-                        Login
+                        Sign in
                     </Link>
 
                 </p>
 
             </div>
+
+
+            {/* PAGE FOOTER */}
+
+            <p className="auth-page-footer">
+                CloudSpace © 2026 · Secure cloud storage and sharing
+            </p>
 
         </div>
 

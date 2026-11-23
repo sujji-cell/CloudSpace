@@ -4,16 +4,37 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import sendEmail from "../utils/sendEmail.js";
 import { createSession } from "../utils/sessionUtils.js";
+
 import {
     createSecurityNotification,
     createSuspiciousLoginNotification
 } from "../utils/securityNotificationUtils.js";
+
 import Session from "../models/Session.js";
 import LoginActivity from "../models/LoginActivity.js";
 
 
 // ============================================
-// GET CLIENT IP ADDRESS
+// HELPER: ESCAPE HTML
+// ============================================
+
+const escapeHtml = (value = "") => {
+    return String(value).replace(/[&<>"']/g, (character) => {
+        const entities = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        };
+
+        return entities[character];
+    });
+};
+
+
+// ============================================
+// HELPER: GET CLIENT IP ADDRESS
 // ============================================
 
 const getClientIp = (req) => {
@@ -23,6 +44,11 @@ const getClientIp = (req) => {
         "Unknown"
     );
 };
+
+
+// ============================================
+// HELPER: CHECK LOGIN LOCKOUT
+// ============================================
 
 const isLoginLocked = async (user, req) => {
     try {
@@ -48,8 +74,10 @@ const isLoginLocked = async (user, req) => {
         throw error;
     }
 };
+
+
 // ============================================
-// RECORD FAILED LOGIN ATTEMPTS
+// HELPER: RECORD FAILED LOGIN ATTEMPTS
 // ============================================
 
 const recordFailedLogin = async (user, req) => {
@@ -59,7 +87,7 @@ const recordFailedLogin = async (user, req) => {
         const userAgent =
             req.headers["user-agent"] || "Unknown";
 
-        // 1. Record the failed login attempt
+        // Record failed login attempt
         await LoginActivity.create({
             userId: user._id,
             sessionId: null,
@@ -69,12 +97,12 @@ const recordFailedLogin = async (user, req) => {
             details: "Incorrect password entered during login."
         });
 
-        // 2. Calculate the 15-minute detection window
+        // Calculate 15-minute detection window
         const fifteenMinutesAgo = new Date(
             Date.now() - 15 * 60 * 1000
         );
 
-        // 3. Count failed attempts from this IP
+        // Count failed attempts
         const failedCount = await LoginActivity.countDocuments({
             userId: user._id,
             event: "login_failed",
@@ -84,16 +112,13 @@ const recordFailedLogin = async (user, req) => {
             }
         });
 
-        console.log(
-            `Failed login attempts: ${failedCount}`
-        );
+        console.log(`Failed login attempts: ${failedCount}`);
 
-        // 4. Trigger alert only after 5 attempts
         if (failedCount < 5) {
             return;
         }
 
-        // 5. Check the 30-minute alert cooldown
+        // Check 30-minute alert cooldown
         const thirtyMinutesAgo = new Date(
             Date.now() - 30 * 60 * 1000
         );
@@ -107,15 +132,11 @@ const recordFailedLogin = async (user, req) => {
             }
         });
 
-        // Prevent repeated alerts during cooldown
         if (existingAlert) {
-            console.log(
-                "Suspicious login alert is in cooldown."
-            );
             return;
         }
 
-        // 6. Record the alert before sending notifications
+        // Record suspicious activity
         await LoginActivity.create({
             userId: user._id,
             sessionId: null,
@@ -125,11 +146,7 @@ const recordFailedLogin = async (user, req) => {
             details: `Suspicious login detected after ${failedCount} failed attempts.`
         });
 
-        console.log(
-            "Suspicious login activity detected!"
-        );
-
-        // 7. Send in-app and email notifications
+        // Send security notifications
         await createSuspiciousLoginNotification(
             user,
             ipAddress,
@@ -144,6 +161,7 @@ const recordFailedLogin = async (user, req) => {
     }
 };
 
+
 // ==========================================
 // REGISTER USER
 // ==========================================
@@ -156,10 +174,24 @@ export const registerUser = async (req, res) => {
             lastName,
             email,
             password
-        } = req.body;
+        } = req.body || {};
+
+        // Validate input types first
+        if (
+            typeof firstName !== "string" ||
+            typeof email !== "string" ||
+            typeof password !== "string" ||
+            (middleName !== undefined && typeof middleName !== "string") ||
+            (lastName !== undefined && typeof lastName !== "string")
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid registration input."
+            });
+        }
 
         // Validate first name
-        if (!firstName || !firstName.trim()) {
+        if (!firstName.trim()) {
             return res.status(400).json({
                 success: false,
                 message: "First name is required."
@@ -167,15 +199,56 @@ export const registerUser = async (req, res) => {
         }
 
         // Validate email
-        if (!email || !email.trim()) {
+        if (!email.trim()) {
             return res.status(400).json({
                 success: false,
                 message: "Email is required."
             });
         }
 
+        // Validate name lengths
+        if (
+            firstName.trim().length > 50 ||
+            (middleName?.trim().length || 0) > 50 ||
+            (lastName?.trim().length || 0) > 50
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Name fields cannot exceed 50 characters."
+            });
+        }
+
+        // Validate full name length
+        const fullName = [
+            firstName.trim(),
+            middleName?.trim() || "",
+            lastName?.trim() || ""
+        ].filter(Boolean).join(" ");
+
+        if (fullName.length > 160) {
+            return res.status(400).json({
+                success: false,
+                message: "Full name cannot exceed 160 characters."
+            });
+        }
+
+        // Validate email format and length
+        const normalizedEmail = email.trim().toLowerCase();
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (
+            normalizedEmail.length > 254 ||
+            !emailRegex.test(normalizedEmail)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Please enter a valid email address."
+            });
+        }
+
         // Validate password
-        if (!password || password.length < 8) {
+        if (password.length < 8) {
             return res.status(400).json({
                 success: false,
                 message: "Password must contain at least 8 characters."
@@ -186,16 +259,6 @@ export const registerUser = async (req, res) => {
         const cleanFirstName = firstName.trim();
         const cleanMiddleName = middleName?.trim() || "";
         const cleanLastName = lastName?.trim() || "";
-
-        // Create full name
-        const fullName = [
-            cleanFirstName,
-            cleanMiddleName,
-            cleanLastName
-        ].filter(Boolean).join(" ");
-
-        // Normalize email
-        const normalizedEmail = email.trim().toLowerCase();
 
         // Check existing user
         const existingUser = await User.findOne({
@@ -212,17 +275,19 @@ export const registerUser = async (req, res) => {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        // Generate 6-digit OTP
+        // Generate OTP
         const otp = crypto.randomInt(100000, 1000000).toString();
 
-        // Hash OTP using HMAC
+        // Hash OTP
         const otpHash = crypto
             .createHmac("sha256", process.env.JWT_SECRET)
             .update(otp)
             .digest("hex");
 
         // OTP expiry: 5 minutes
-        const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+        const otpExpiry = new Date(
+            Date.now() + 5 * 60 * 1000
+        );
 
         // Create user
         const user = await User.create({
@@ -248,7 +313,7 @@ export const registerUser = async (req, res) => {
                     <div style="font-family: Arial, sans-serif; padding: 20px;">
                         <h2>Welcome to CloudSpace!</h2>
 
-                        <p>Hello ${cleanFirstName},</p>
+                        <p>Hello ${escapeHtml(cleanFirstName)},</p>
 
                         <p>
                             Thank you for registering with CloudSpace.
@@ -306,6 +371,14 @@ export const registerUser = async (req, res) => {
     } catch (error) {
         console.error("Registration error:", error);
 
+        // Handle duplicate email race condition
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: "An account with this email already exists."
+            });
+        }
+
         return res.status(500).json({
             success: false,
             message: "Registration failed. Please try again."
@@ -320,9 +393,19 @@ export const registerUser = async (req, res) => {
 
 export const verifyEmail = async (req, res) => {
     try {
-        const { email, otp } = req.body;
+        const { email, otp } = req.body || {};
 
-        if (!email || !otp) {
+        if (
+            typeof email !== "string" ||
+            typeof otp !== "string"
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid email verification input."
+            });
+        }
+
+        if (!email.trim() || !otp) {
             return res.status(400).json({
                 success: false,
                 message: "Email and OTP are required."
@@ -375,6 +458,7 @@ export const verifyEmail = async (req, res) => {
             });
         }
 
+        // Hash entered OTP
         const enteredOtpHash = crypto
             .createHmac("sha256", process.env.JWT_SECRET)
             .update(otp)
@@ -388,7 +472,6 @@ export const verifyEmail = async (req, res) => {
             crypto.timingSafeEqual(storedHash, enteredHash);
 
         if (!isOtpValid) {
-
             user.emailOtpAttempts += 1;
             await user.save();
 
@@ -426,17 +509,17 @@ export const verifyEmail = async (req, res) => {
 
 
 // ==========================================
-// RESEND OTP
+// RESEND EMAIL VERIFICATION OTP
 // ==========================================
 
 export const resendOtp = async (req, res) => {
     try {
-        const { email } = req.body;
+        const { email } = req.body || {};
 
-        if (!email) {
+        if (typeof email !== "string" || !email.trim()) {
             return res.status(400).json({
                 success: false,
-                message: "Email is required."
+                message: "Invalid email address."
             });
         }
 
@@ -460,7 +543,6 @@ export const resendOtp = async (req, res) => {
 
         // 60-second resend cooldown
         if (user.emailOtpLastSentAt) {
-
             const timePassed =
                 Date.now() - user.emailOtpLastSentAt.getTime();
 
@@ -481,14 +563,15 @@ export const resendOtp = async (req, res) => {
             .digest("hex");
 
         user.emailOtpHash = otpHash;
-        user.emailOtpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+        user.emailOtpExpiresAt = new Date(
+            Date.now() + 5 * 60 * 1000
+        );
         user.emailOtpAttempts = 0;
         user.emailOtpLastSentAt = new Date();
 
         await user.save();
 
         try {
-
             await sendEmail(
                 user.email,
                 "Your New CloudSpace Verification OTP",
@@ -496,7 +579,7 @@ export const resendOtp = async (req, res) => {
                     <div style="font-family: Arial, sans-serif; padding: 20px;">
                         <h2>CloudSpace Email Verification</h2>
 
-                        <p>Hello ${user.firstName},</p>
+                        <p>Hello ${escapeHtml(user.firstName)},</p>
 
                         <p>Your new verification OTP is:</p>
 
@@ -550,9 +633,20 @@ export const resendOtp = async (req, res) => {
 
 export const loginUser = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password } = req.body || {};
 
-        if (!email || !password) {
+        // Validate input types
+        if (
+            typeof email !== "string" ||
+            typeof password !== "string"
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid login input."
+            });
+        }
+
+        if (!email.trim() || !password) {
             return res.status(400).json({
                 success: false,
                 message: "Email and password are required."
@@ -570,15 +664,15 @@ export const loginUser = async (req, res) => {
             });
         }
 
-        // Check whether login is temporarily locked
-const isLocked = await isLoginLocked(user, req);
+        // Check temporary lockout
+        const isLocked = await isLoginLocked(user, req);
 
-if (isLocked) {
-    return res.status(429).json({
-        success: false,
-        message: "Too many failed login attempts. Please try again later."
-    });
-}
+        if (isLocked) {
+            return res.status(429).json({
+                success: false,
+                message: "Too many failed login attempts. Please try again later."
+            });
+        }
 
         const isPasswordCorrect = await bcrypt.compare(
             password,
@@ -586,7 +680,6 @@ if (isLocked) {
         );
 
         if (!isPasswordCorrect) {
-
             await recordFailedLogin(user, req);
 
             return res.status(401).json({
@@ -608,10 +701,23 @@ if (isLocked) {
 
         if (user.twoFactorEnabled) {
 
-            // Generate secure 6-digit OTP
+            // Prevent repeated login OTP emails
+            if (user.loginOtpLastSentAt) {
+                const timePassed =
+                    Date.now() - user.loginOtpLastSentAt.getTime();
+
+                if (timePassed < 60000) {
+                    return res.status(429).json({
+                        success: false,
+                        message: "Please wait before requesting another login OTP."
+                    });
+                }
+            }
+
+            // Generate secure OTP
             const otp = crypto.randomInt(100000, 1000000).toString();
 
-            // Hash OTP using HMAC
+            // Hash OTP
             const otpHash = crypto
                 .createHmac("sha256", process.env.JWT_SECRET)
                 .update(otp)
@@ -622,6 +728,8 @@ if (isLocked) {
             user.loginOtpExpiresAt = new Date(
                 Date.now() + 5 * 60 * 1000
             );
+
+            // Reset attempts for a fresh password-authenticated challenge
             user.loginOtpAttempts = 0;
             user.loginOtpLastSentAt = new Date();
 
@@ -629,7 +737,6 @@ if (isLocked) {
 
             // Send login OTP
             try {
-
                 await sendEmail(
                     user.email,
                     "Your CloudSpace Login Verification Code",
@@ -637,7 +744,7 @@ if (isLocked) {
                         <div style="font-family: Arial, sans-serif; padding: 20px;">
                             <h2>CloudSpace Login Verification</h2>
 
-                            <p>Hello ${user.firstName},</p>
+                            <p>Hello ${escapeHtml(user.firstName)},</p>
 
                             <p>
                                 Someone is attempting to log in to your
@@ -669,7 +776,6 @@ if (isLocked) {
 
             } catch (emailError) {
 
-                // Clear OTP if email sending fails
                 user.loginOtpHash = undefined;
                 user.loginOtpExpiresAt = undefined;
                 user.loginOtpAttempts = 0;
@@ -685,7 +791,6 @@ if (isLocked) {
                 });
             }
 
-            // Do not generate JWT yet
             return res.status(200).json({
                 success: true,
                 requiresTwoFactor: true,
@@ -698,11 +803,19 @@ if (isLocked) {
         // NORMAL LOGIN (2FA DISABLED)
         // ======================================
 
-        // Create a new session
         const session = await createSession(user._id, req);
-        // Generate security notification for a new device
-        await createSecurityNotification(user, session);
-        // Generate JWT with userId and sessionId
+
+        // Security notification should not interrupt login
+        try {
+            await createSecurityNotification(user, session);
+        } catch (notificationError) {
+            console.error(
+                "Security notification failed:",
+                notificationError.message
+            );
+        }
+
+        // Generate JWT
         const token = jwt.sign(
             {
                 userId: user._id,
@@ -747,16 +860,25 @@ if (isLocked) {
 };
 
 
-
 // ==========================================
 // VERIFY LOGIN OTP
 // ==========================================
 
 export const verifyLoginOtp = async (req, res) => {
     try {
-        const { email, otp } = req.body;
+        const { email, otp } = req.body || {};
 
-        if (!email || !otp) {
+        if (
+            typeof email !== "string" ||
+            typeof otp !== "string"
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid login OTP input."
+            });
+        }
+
+        if (!email.trim() || !otp) {
             return res.status(400).json({
                 success: false,
                 message: "Email and OTP are required."
@@ -816,9 +938,7 @@ export const verifyLoginOtp = async (req, res) => {
             crypto.timingSafeEqual(storedHash, enteredHash);
 
         if (!isOtpValid) {
-
             user.loginOtpAttempts += 1;
-
             await user.save();
 
             return res.status(400).json({
@@ -835,12 +955,20 @@ export const verifyLoginOtp = async (req, res) => {
 
         await user.save();
 
-        // Generate JWT only after successful verification
-        // Create a new session after successful OTP verification
+        // Create session after successful OTP verification
         const session = await createSession(user._id, req);
-        // Generate security notification for a new device
-        await createSecurityNotification(user, session);
-        // Generate JWT with userId and sessionId
+
+        // Security notification should not interrupt login
+        try {
+            await createSecurityNotification(user, session);
+        } catch (notificationError) {
+            console.error(
+                "Security notification failed:",
+                notificationError.message
+            );
+        }
+
+        // Generate JWT
         const token = jwt.sign(
             {
                 userId: user._id,
@@ -891,12 +1019,12 @@ export const verifyLoginOtp = async (req, res) => {
 
 export const resendLoginOtp = async (req, res) => {
     try {
-        const { email } = req.body;
+        const { email } = req.body || {};
 
-        if (!email) {
+        if (typeof email !== "string" || !email.trim()) {
             return res.status(400).json({
                 success: false,
-                message: "Email is required."
+                message: "Invalid email address."
             });
         }
 
@@ -917,7 +1045,6 @@ export const resendLoginOtp = async (req, res) => {
 
         // 60-second resend cooldown
         if (user.loginOtpLastSentAt) {
-
             const timePassed =
                 Date.now() - user.loginOtpLastSentAt.getTime();
 
@@ -942,13 +1069,15 @@ export const resendLoginOtp = async (req, res) => {
         user.loginOtpExpiresAt = new Date(
             Date.now() + 5 * 60 * 1000
         );
-        user.loginOtpAttempts = 0;
+
+        // Do not reset loginOtpAttempts here.
+        // Resending must not grant another five guessing attempts.
+
         user.loginOtpLastSentAt = new Date();
 
         await user.save();
 
         try {
-
             await sendEmail(
                 user.email,
                 "Your New CloudSpace Login OTP",
@@ -956,7 +1085,7 @@ export const resendLoginOtp = async (req, res) => {
                     <div style="font-family: Arial, sans-serif; padding: 20px;">
                         <h2>CloudSpace Login Verification</h2>
 
-                        <p>Hello ${user.firstName},</p>
+                        <p>Hello ${escapeHtml(user.firstName)},</p>
 
                         <p>Your new login verification code is:</p>
 
@@ -978,7 +1107,6 @@ export const resendLoginOtp = async (req, res) => {
 
             user.loginOtpHash = undefined;
             user.loginOtpExpiresAt = undefined;
-            user.loginOtpAttempts = 0;
             user.loginOtpLastSentAt = undefined;
 
             await user.save();
@@ -1007,19 +1135,28 @@ export const resendLoginOtp = async (req, res) => {
 };
 
 
-
 // ==========================================
 // UPDATE TWO-FACTOR AUTHENTICATION SETTINGS
 // ==========================================
 
 export const updateTwoFactorSettings = async (req, res) => {
     try {
-        const { enabled, currentPassword } = req.body;
+        const { enabled, currentPassword } = req.body || {};
 
-        if (typeof enabled !== "boolean" || !currentPassword) {
+        if (
+            typeof currentPassword !== "string" ||
+            !currentPassword.trim()
+        ) {
             return res.status(400).json({
                 success: false,
-                message: "A valid setting and current password are required."
+                message: "Please provide your current password."
+            });
+        }
+
+        if (typeof enabled !== "boolean") {
+            return res.status(400).json({
+                success: false,
+                message: "A valid two-factor authentication setting is required."
             });
         }
 
@@ -1056,7 +1193,7 @@ export const updateTwoFactorSettings = async (req, res) => {
         // Update 2FA setting
         user.twoFactorEnabled = enabled;
 
-        // Clear any pending login OTP
+        // Clear pending login OTP
         user.loginOtpHash = undefined;
         user.loginOtpExpiresAt = undefined;
         user.loginOtpAttempts = 0;
@@ -1083,7 +1220,6 @@ export const updateTwoFactorSettings = async (req, res) => {
 };
 
 
-
 // ==========================================
 // GET CURRENT USER
 // ==========================================
@@ -1091,8 +1227,7 @@ export const updateTwoFactorSettings = async (req, res) => {
 export const getCurrentUser = async (req, res) => {
     try {
         const user = await User.findById(req.userId);
-        console.log("USER ID:", user?._id);
-        console.log("2FA STATUS FROM DATABASE:", user?.twoFactorEnabled);
+
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -1112,7 +1247,7 @@ export const getCurrentUser = async (req, res) => {
                 storageUsed: user.storageUsed,
                 storageLimit: user.storageLimit,
                 createdAt: user.createdAt,
-                twoFactorEnabled: user.twoFactorEnabled,
+                twoFactorEnabled: user.twoFactorEnabled
             }
         });
 
@@ -1132,20 +1267,59 @@ export const getCurrentUser = async (req, res) => {
 // ==========================================
 
 export const updateProfile = async (req, res) => {
-
     try {
-
         const {
             firstName,
             middleName,
             lastName
-        } = req.body;
+        } = req.body || {};
+
+        // Validate input types
+        if (
+            typeof firstName !== "string" ||
+            (middleName !== undefined && typeof middleName !== "string") ||
+            (lastName !== undefined && typeof lastName !== "string")
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid profile information."
+            });
+        }
 
         // Validate first name
-        if (!firstName || !firstName.trim()) {
+        if (!firstName.trim()) {
             return res.status(400).json({
                 success: false,
                 message: "First name is required."
+            });
+        }
+
+        // Validate name lengths
+        if (
+            firstName.trim().length > 50 ||
+            (middleName?.trim().length || 0) > 50 ||
+            (lastName?.trim().length || 0) > 50
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Name fields cannot exceed 50 characters."
+            });
+        }
+
+        const cleanFirstName = firstName.trim();
+        const cleanMiddleName = middleName?.trim() || "";
+        const cleanLastName = lastName?.trim() || "";
+
+        const fullName = [
+            cleanFirstName,
+            cleanMiddleName,
+            cleanLastName
+        ].filter(Boolean).join(" ");
+
+        if (fullName.length > 160) {
+            return res.status(400).json({
+                success: false,
+                message: "Full name cannot exceed 160 characters."
             });
         }
 
@@ -1159,31 +1333,17 @@ export const updateProfile = async (req, res) => {
             });
         }
 
-        // Clean name fields
-        const cleanFirstName = firstName.trim();
-        const cleanMiddleName = middleName?.trim() || "";
-        const cleanLastName = lastName?.trim() || "";
-
         // Update user details
         user.firstName = cleanFirstName;
         user.middleName = cleanMiddleName;
         user.lastName = cleanLastName;
-
-        // Update full name
-        user.name = [
-            cleanFirstName,
-            cleanMiddleName,
-            cleanLastName
-        ].filter(Boolean).join(" ");
+        user.name = fullName;
 
         await user.save();
 
         return res.status(200).json({
-
             success: true,
-
             message: "Profile updated successfully.",
-
             user: {
                 id: user._id,
                 firstName: user.firstName,
@@ -1195,20 +1355,16 @@ export const updateProfile = async (req, res) => {
                 storageLimit: user.storageLimit,
                 createdAt: user.createdAt
             }
-
         });
 
     } catch (error) {
-
         console.error("Update profile error:", error);
 
         return res.status(500).json({
             success: false,
             message: "Unable to update profile."
         });
-
     }
-
 };
 
 
@@ -1217,15 +1373,23 @@ export const updateProfile = async (req, res) => {
 // ==========================================
 
 export const changePassword = async (req, res) => {
-
     try {
-
         const {
             currentPassword,
             newPassword
-        } = req.body;
+        } = req.body || {};
 
-        // Validate input
+        // Validate input types
+        if (
+            typeof currentPassword !== "string" ||
+            typeof newPassword !== "string"
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid password input."
+            });
+        }
+
         if (!currentPassword || !newPassword) {
             return res.status(400).json({
                 success: false,
@@ -1233,7 +1397,6 @@ export const changePassword = async (req, res) => {
             });
         }
 
-        // Validate new password length
         if (newPassword.length < 8) {
             return res.status(400).json({
                 success: false,
@@ -1241,7 +1404,6 @@ export const changePassword = async (req, res) => {
             });
         }
 
-        // Prevent reusing the current password
         if (currentPassword === newPassword) {
             return res.status(400).json({
                 success: false,
@@ -1276,10 +1438,24 @@ export const changePassword = async (req, res) => {
         // Hash new password
         const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-        // Update password
         user.password = hashedPassword;
 
-        await user.save();
+await user.save();
+
+// Revoke all other active sessions
+await Session.updateMany(
+    {
+        userId: user._id,
+        sessionId: { $ne: req.sessionId },
+        isRevoked: false
+    },
+    {
+        $set: {
+            isRevoked: true,
+            revokedAt: new Date()
+        }
+    }
+);
 
         return res.status(200).json({
             success: true,
@@ -1287,20 +1463,14 @@ export const changePassword = async (req, res) => {
         });
 
     } catch (error) {
-
         console.error("Change password error:", error);
 
         return res.status(500).json({
             success: false,
             message: "Unable to change password. Please try again."
         });
-
     }
-
 };
-
-
-
 
 
 // ==========================================
@@ -1309,7 +1479,7 @@ export const changePassword = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
     try {
-        // Find and revoke the current session
+        // Revoke current session
         const session = await Session.findOneAndUpdate(
             {
                 userId: req.userId,
@@ -1321,7 +1491,7 @@ export const logoutUser = async (req, res) => {
                 revokedAt: new Date()
             },
             {
-                new: true
+                returnDocument: "after"
             }
         );
 
@@ -1362,46 +1532,59 @@ export const logoutUser = async (req, res) => {
     }
 };
 
-// Get Notification Preferences
+
+// ==========================================
+// GET NOTIFICATION PREFERENCES
+// ==========================================
+
 export const getNotificationPreferences = async (req, res) => {
-
     try {
-
         const user = await User.findById(req.userId);
 
         if (!user) {
             return res.status(404).json({
-                message: "User not found"
+                success: false,
+                message: "User not found."
             });
         }
 
         return res.status(200).json({
-            message: "Notification preferences fetched successfully",
+            success: true,
+            message: "Notification preferences fetched successfully.",
             preferences: user.notificationPreferences
         });
 
     } catch (error) {
-
         console.error("Get Notification Preferences Error:", error);
 
         return res.status(500).json({
-            message: "Failed to fetch notification preferences"
+            success: false,
+            message: "Failed to fetch notification preferences."
         });
     }
 };
 
 
-// Update Notification Preferences
+// ==========================================
+// UPDATE NOTIFICATION PREFERENCES
+// ==========================================
+
 export const updateNotificationPreferences = async (req, res) => {
-
     try {
+        const { email, inApp } = req.body || {};
 
-        const { email, inApp } = req.body;
-
-        // Validate request data
-        if (!email || !inApp) {
+        // Validate object types
+        if (
+            !email ||
+            typeof email !== "object" ||
+            Array.isArray(email) ||
+            !inApp ||
+            typeof inApp !== "object" ||
+            Array.isArray(inApp)
+        ) {
             return res.status(400).json({
-                message: "Notification preferences are required"
+                success: false,
+                message: "Invalid notification preferences."
             });
         }
 
@@ -1416,7 +1599,8 @@ export const updateNotificationPreferences = async (req, res) => {
 
         if (!preferenceValues.every(value => typeof value === "boolean")) {
             return res.status(400).json({
-                message: "All notification preferences must be boolean values"
+                success: false,
+                message: "All notification preferences must be boolean values."
             });
         }
 
@@ -1424,18 +1608,17 @@ export const updateNotificationPreferences = async (req, res) => {
 
         if (!user) {
             return res.status(404).json({
-                message: "User not found"
+                success: false,
+                message: "User not found."
             });
         }
 
-        // Update preferences
         user.notificationPreferences = {
             email: {
                 fileSharing: email.fileSharing,
                 fileUploads: email.fileUploads,
                 securityAlerts: email.securityAlerts
             },
-
             inApp: {
                 sharedFileUpdates: inApp.sharedFileUpdates,
                 storageAlerts: inApp.storageAlerts,
@@ -1446,55 +1629,66 @@ export const updateNotificationPreferences = async (req, res) => {
         await user.save();
 
         return res.status(200).json({
-            message: "Notification preferences updated successfully",
+            success: true,
+            message: "Notification preferences updated successfully.",
             preferences: user.notificationPreferences
         });
 
     } catch (error) {
-
         console.error("Update Notification Preferences Error:", error);
 
         return res.status(500).json({
-            message: "Failed to update notification preferences"
+            success: false,
+            message: "Failed to update notification preferences."
         });
     }
 };
 
-// Get Appearance Preferences
+
+// ==========================================
+// GET APPEARANCE PREFERENCES
+// ==========================================
+
 export const getAppearancePreferences = async (req, res) => {
-
     try {
-
         const user = await User.findById(req.userId);
 
         if (!user) {
             return res.status(404).json({
-                message: "User not found"
+                success: false,
+                message: "User not found."
             });
         }
 
         return res.status(200).json({
-            message: "Appearance preferences fetched successfully",
+            success: true,
+            message: "Appearance preferences fetched successfully.",
             preferences: user.appearancePreferences
         });
 
     } catch (error) {
-
         console.error("Get Appearance Preferences Error:", error);
 
         return res.status(500).json({
-            message: "Failed to fetch appearance preferences"
+            success: false,
+            message: "Failed to fetch appearance preferences."
         });
     }
 };
 
 
-// Update Appearance Preferences
+// ==========================================
+// UPDATE APPEARANCE PREFERENCES
+// ==========================================
+
 export const updateAppearancePreferences = async (req, res) => {
-
     try {
-
-        const { theme, accentColor, sidebar, density } = req.body;
+        const {
+            theme,
+            accentColor,
+            sidebar,
+            density
+        } = req.body || {};
 
         const allowedValues = {
             theme: ["light", "dark", "system"],
@@ -1511,7 +1705,8 @@ export const updateAppearancePreferences = async (req, res) => {
             !allowedValues.density.includes(density)
         ) {
             return res.status(400).json({
-                message: "Invalid appearance preferences"
+                success: false,
+                message: "Invalid appearance preferences."
             });
         }
 
@@ -1519,11 +1714,11 @@ export const updateAppearancePreferences = async (req, res) => {
 
         if (!user) {
             return res.status(404).json({
-                message: "User not found"
+                success: false,
+                message: "User not found."
             });
         }
 
-        // Update appearance preferences
         user.appearancePreferences = {
             theme,
             accentColor,
@@ -1534,16 +1729,17 @@ export const updateAppearancePreferences = async (req, res) => {
         await user.save();
 
         return res.status(200).json({
-            message: "Appearance preferences updated successfully",
+            success: true,
+            message: "Appearance preferences updated successfully.",
             preferences: user.appearancePreferences
         });
 
     } catch (error) {
-
         console.error("Update Appearance Preferences Error:", error);
 
         return res.status(500).json({
-            message: "Failed to update appearance preferences"
+            success: false,
+            message: "Failed to update appearance preferences."
         });
     }
 };

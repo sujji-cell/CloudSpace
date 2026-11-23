@@ -1,5 +1,10 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+    useState,
+    useEffect,
+    useRef,
+    useCallback
+} from "react";
 import { useSearchParams } from "react-router-dom";
 
 import Sidebar from "../components/Sidebar";
@@ -271,41 +276,45 @@ function MyFiles() {
     };
 
 
-    // --------------------------------
-    // FETCH USER FILES
-    // --------------------------------
+   // --------------------------------
+// FETCH USER FILES
+// --------------------------------
 
-    const fetchFiles = async () => {
-        try {
-            setLoading(true);
-            setError("");
+const fetchFiles = useCallback(async () => {
+    try {
+        setLoading(true);
+        setError("");
 
-            const response = await api.get("/files", {
-                params: currentFolderId
-                    ? { folderId: currentFolderId }
-                    : { root: "true" }
-            });
+        const response = await api.get("/files", {
+            params: currentFolderId
+                ? { folderId: currentFolderId }
+                : { root: "true" }
+        });
 
-            setFiles(response.data.files || []);
+        setFiles(response.data.files || []);
 
-        } catch (error) {
-            console.error("Error fetching files:", error);
+    } catch (error) {
+        console.error("Error fetching files:", error);
 
-            setError(
-                error.response?.data?.message ||
-                "Unable to load your files."
-            );
+        setError(
+            error.response?.data?.message ||
+            "Unable to load your files."
+        );
 
-        } finally {
-            setLoading(false);
-        }
-    };
+    } finally {
+        setLoading(false);
+    }
+}, [currentFolderId]);
 
     // --------------------------------
     // FETCH USER FOLDERS
     // --------------------------------
 
-    const fetchFolders = async () => {
+    // --------------------------------
+    // FETCH USER FOLDERS
+    // --------------------------------
+
+    const fetchFolders = useCallback(async () => {
         try {
             setFolderLoading(true);
 
@@ -324,13 +333,17 @@ function MyFiles() {
         } finally {
             setFolderLoading(false);
         }
-    };
+    }, []);
 
     // --------------------------------
     // FETCH USER FAVOURITES
     // --------------------------------
 
-    const fetchFavorites = async () => {
+    // --------------------------------
+    // FETCH USER FAVOURITES
+    // --------------------------------
+
+    const fetchFavorites = useCallback(async () => {
         try {
             const response = await api.get("/favorites");
 
@@ -343,7 +356,7 @@ function MyFiles() {
         } catch (error) {
             console.error("Error fetching favourites:", error);
         }
-    };
+    }, []);
 
     // --------------------------------
     // CREATE / RENAME FOLDER MODAL
@@ -404,7 +417,10 @@ function MyFiles() {
 
             await fetchFolders();
 
-            closeFolderModal();
+            setShowFolderModal(false);
+            setFolderName("");
+            setEditingFolderId(null);
+            setFolderError("");
 
         } catch (error) {
             console.error("Folder operation error:", error);
@@ -716,6 +732,8 @@ function MyFiles() {
             return;
         }
 
+        let successfulUploads = 0;
+
         try {
             setUploading(true);
             setUploadError("");
@@ -730,13 +748,9 @@ function MyFiles() {
                 }
 
                 await api.post("/files/upload", formData);
+
+                successfulUploads++;
             }
-
-            await fetchFiles();
-
-            window.dispatchEvent(
-                new Event("cloudspace-files-updated")
-            );
 
         } catch (error) {
             console.error("File upload error:", error);
@@ -747,6 +761,20 @@ function MyFiles() {
             );
 
         } finally {
+
+            // Refresh if at least one file was uploaded successfully
+            if (successfulUploads > 0) {
+                try {
+                    await fetchFiles();
+
+                    window.dispatchEvent(
+                        new Event("cloudspace-files-updated")
+                    );
+                } catch (refreshError) {
+                    console.error("File refresh error:", refreshError);
+                }
+            }
+
             setUploading(false);
 
             if (fileInputRef.current) {
@@ -755,18 +783,20 @@ function MyFiles() {
         }
     };
 
+
+
     // --------------------------------
     // INITIAL DATA FETCH
     // --------------------------------
 
     useEffect(() => {
         fetchFiles();
-    }, [currentFolderId]);
+    }, [fetchFiles]);
 
     useEffect(() => {
         fetchFolders();
         fetchFavorites();
-    }, []);
+    }, [fetchFolders, fetchFavorites]);
 
     // --------------------------------
     // FORMAT FILE SIZE
@@ -2045,9 +2075,8 @@ function MyFiles() {
                                 <h2>Delete this file?</h2>
 
                                 <p>
-                                    This file will be permanently deleted
-                                    from your CloudSpace account.
-                                    You won't be able to recover it.
+                                    This file will be moved to the Recycle Bin. You can restore it
+                                    later or permanently delete it from the Recycle Bin.
                                 </p>
 
                                 {deleteError && (

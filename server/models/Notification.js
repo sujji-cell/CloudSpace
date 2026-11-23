@@ -7,8 +7,7 @@ const notificationSchema = new mongoose.Schema(
         recipient: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true,
-            index: true
+            required: true
         },
 
         // User who triggered the notification
@@ -36,14 +35,16 @@ const notificationSchema = new mongoose.Schema(
         title: {
             type: String,
             required: true,
-            trim: true
+            trim: true,
+            maxlength: 120
         },
 
         // Notification description
         message: {
             type: String,
             required: true,
-            trim: true
+            trim: true,
+            maxlength: 1000
         },
 
         // Related file (if applicable)
@@ -63,14 +64,15 @@ const notificationSchema = new mongoose.Schema(
         // Navigation destination
         link: {
             type: String,
+            trim: true,
+            maxlength: 500,
             default: ""
         },
 
         // Read status
         isRead: {
             type: Boolean,
-            default: false,
-            index: true
+            default: false
         },
 
         // When notification was read
@@ -88,10 +90,39 @@ const notificationSchema = new mongoose.Schema(
 );
 
 
-// Index for retrieving a user's latest notifications
+// ============================================
+// AUTOMATIC READ STATUS MANAGEMENT
+// ============================================
+
+notificationSchema.pre("validate", function () {
+
+    if (!this.isRead) {
+
+        this.readAt = null;
+
+    } else if (!this.readAt) {
+
+        this.readAt = new Date();
+
+    }
+
+});
+
+
+// ============================================
+// DATABASE INDEXES
+// ============================================
+
+// Efficiently retrieve a user's latest notifications
 notificationSchema.index({
     recipient: 1,
     createdAt: -1
+});
+
+// Efficiently count unread notifications for a user
+notificationSchema.index({
+    recipient: 1,
+    isRead: 1
 });
 
 

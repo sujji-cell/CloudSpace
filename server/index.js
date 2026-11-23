@@ -12,6 +12,8 @@ import folderRoutes from "./routes/folderRoutes.js";
 import recycleBinRoutes from "./routes/recycleBinRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import sessionRoutes from "./routes/sessionRoutes.js";
+import uploadErrorMiddleware from "./middleware/uploadErrorMiddleware.js";
+import errorMiddleware from "./middleware/errorMiddleware.js";
 dotenv.config();
 
 const app = express();
@@ -56,6 +58,12 @@ app.use("/api/notifications", notificationRoutes);
 
 // Session Management
 app.use("/api/sessions", sessionRoutes);
+
+// Upload Error Handling
+app.use(uploadErrorMiddleware);
+
+// Global Error Handling
+app.use(errorMiddleware);
 
 // Start Server
 

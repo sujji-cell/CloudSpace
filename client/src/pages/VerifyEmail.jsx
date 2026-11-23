@@ -1,6 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Cloud, Mail, ArrowLeft, CheckCircle, RefreshCw } from "lucide-react";
+import {
+    Cloud,
+    Mail,
+    ArrowLeft,
+    CheckCircle,
+    RefreshCw
+} from "lucide-react";
+
 import api from "../api/axios";
 import "./VerifyEmail.css";
 
@@ -8,62 +15,140 @@ function VerifyEmail() {
     const location = useLocation();
     const navigate = useNavigate();
 
-    // Get email passed from Register page
     const email = location.state?.email || "";
 
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
     const [loading, setLoading] = useState(false);
     const [resending, setResending] = useState(false);
+
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+
     const [countdown, setCountdown] = useState(60);
 
     const inputRefs = useRef([]);
+    const redirectTimerRef = useRef(null);
 
-    // Redirect if email is not available
+    const isVerified = Boolean(success && !loading);
+
+    // ==========================================
+    // REDIRECT IF EMAIL IS MISSING
+    // ==========================================
+
     useEffect(() => {
         if (!email) {
             navigate("/register", { replace: true });
         }
     }, [email, navigate]);
 
-    // Resend OTP countdown
+    // ==========================================
+    // CLEANUP REDIRECT TIMER
+    // ==========================================
+
+    useEffect(() => {
+        return () => {
+            if (redirectTimerRef.current) {
+                clearTimeout(redirectTimerRef.current);
+            }
+        };
+    }, []);
+
+    // ==========================================
+    // OTP RESEND COUNTDOWN
+    // ==========================================
+
     useEffect(() => {
         if (countdown <= 0) return;
 
         const timer = setTimeout(() => {
-            setCountdown((prev) => prev - 1);
+            setCountdown((previous) => previous - 1);
         }, 1000);
 
         return () => clearTimeout(timer);
     }, [countdown]);
 
-    // Handle OTP input
+    // ==========================================
+    // RESET OTP
+    // ==========================================
+
+    const resetOtp = () => {
+        setOtp(["", "", "", "", "", ""]);
+        inputRefs.current[0]?.focus();
+    };
+
+    // ==========================================
+    // UPDATE OTP INPUTS
+    // ==========================================
+
     const handleOtpChange = (index, value) => {
-        if (!/^\d*$/.test(value)) return;
+        if (loading || isVerified) return;
 
-        const updatedOtp = [...otp];
-        updatedOtp[index] = value.slice(-1);
+        const digits = value.replace(/\D/g, "");
 
-        setOtp(updatedOtp);
         setError("");
         setSuccess("");
 
-        // Move to next input
-        if (value && index < 5) {
+        // Handle browser OTP autofill or multi-digit input
+        if (digits.length > 1) {
+            const updatedOtp = ["", "", "", "", "", ""];
+
+            digits.slice(0, 6).split("").forEach((digit, digitIndex) => {
+                updatedOtp[digitIndex] = digit;
+            });
+
+            setOtp(updatedOtp);
+
+            const nextIndex = Math.min(digits.length, 5);
+
+            inputRefs.current[nextIndex]?.focus();
+
+            return;
+        }
+
+        const updatedOtp = [...otp];
+
+        updatedOtp[index] = digits.slice(-1);
+
+        setOtp(updatedOtp);
+
+        // Move to next input automatically
+        if (digits && index < 5) {
             inputRefs.current[index + 1]?.focus();
         }
     };
 
-    // Handle backspace
+    // ==========================================
+    // KEYBOARD NAVIGATION
+    // ==========================================
+
     const handleKeyDown = (index, e) => {
+        if (loading || isVerified) return;
+
+        // Move backward using Backspace
         if (e.key === "Backspace" && !otp[index] && index > 0) {
             inputRefs.current[index - 1]?.focus();
         }
+
+        // Navigate left
+        if (e.key === "ArrowLeft" && index > 0) {
+            e.preventDefault();
+            inputRefs.current[index - 1]?.focus();
+        }
+
+        // Navigate right
+        if (e.key === "ArrowRight" && index < 5) {
+            e.preventDefault();
+            inputRefs.current[index + 1]?.focus();
+        }
     };
 
-    // Handle pasting OTP
+    // ==========================================
+    // PASTE OTP
+    // ==========================================
+
     const handlePaste = (e) => {
+        if (loading || isVerified) return;
+
         e.preventDefault();
 
         const pastedValue = e.clipboardData
@@ -73,7 +158,7 @@ function VerifyEmail() {
 
         if (!pastedValue) return;
 
-        const updatedOtp = [...otp];
+        const updatedOtp = ["", "", "", "", "", ""];
 
         pastedValue.split("").forEach((digit, index) => {
             updatedOtp[index] = digit;
@@ -81,21 +166,28 @@ function VerifyEmail() {
 
         setOtp(updatedOtp);
         setError("");
+        setSuccess("");
 
         const nextIndex = Math.min(pastedValue.length, 5);
+
         inputRefs.current[nextIndex]?.focus();
     };
 
-    // Verify email
+    // ==========================================
+    // VERIFY EMAIL
+    // ==========================================
+
     const handleVerify = async (e) => {
         e.preventDefault();
+
+        if (loading || resending || isVerified) return;
 
         setError("");
         setSuccess("");
 
         const enteredOtp = otp.join("");
 
-        if (enteredOtp.length !== 6) {
+        if (!/^\d{6}$/.test(enteredOtp)) {
             setError("Please enter the complete 6-digit OTP.");
             return;
         }
@@ -108,17 +200,17 @@ function VerifyEmail() {
                 otp: enteredOtp
             });
 
-            console.log("Verification Response:", response.data);
-
-            if (response.data.success === false) {
-                setError(response.data.message || "Verification failed.");
+            if (response.data?.success === false) {
+                setError(
+                    response.data.message || "Email verification failed."
+                );
                 return;
             }
 
             setSuccess("Your email has been verified successfully!");
 
             // Redirect to login after successful verification
-            setTimeout(() => {
+            redirectTimerRef.current = setTimeout(() => {
                 navigate("/login", {
                     replace: true,
                     state: {
@@ -129,8 +221,7 @@ function VerifyEmail() {
             }, 1500);
 
         } catch (err) {
-            console.error("Verification Error:", err);
-            console.error("Backend Response:", err.response?.data);
+            console.error("Email Verification Error:", err);
 
             setError(
                 err.response?.data?.message ||
@@ -142,8 +233,13 @@ function VerifyEmail() {
         }
     };
 
-    // Resend OTP
+    // ==========================================
+    // RESEND OTP
+    // ==========================================
+
     const handleResendOtp = async () => {
+        if (resending || loading || countdown > 0 || isVerified) return;
+
         setError("");
         setSuccess("");
 
@@ -154,23 +250,24 @@ function VerifyEmail() {
                 email
             });
 
-            console.log("Resend OTP Response:", response.data);
-
-            if (response.data.success === false) {
-                setError(response.data.message || "Unable to resend OTP.");
+            if (response.data?.success === false) {
+                setError(
+                    response.data.message || "Unable to resend OTP."
+                );
                 return;
             }
 
-            setSuccess("A new verification code has been sent to your email.");
+            setSuccess(
+                "A new verification code has been sent to your email."
+            );
 
-            setOtp(["", "", "", "", "", ""]);
+            resetOtp();
+
+            // Restart countdown only after successful resend
             setCountdown(60);
-
-            inputRefs.current[0]?.focus();
 
         } catch (err) {
             console.error("Resend OTP Error:", err);
-            console.error("Backend Response:", err.response?.data);
 
             setError(
                 err.response?.data?.message ||
@@ -182,29 +279,45 @@ function VerifyEmail() {
         }
     };
 
+    // ==========================================
+    // WAIT WHILE REDIRECTING
+    // ==========================================
+
     if (!email) {
         return null;
     }
+
+    // ==========================================
+    // UI
+    // ==========================================
 
     return (
         <div className="verify-page">
 
             {/* Brand */}
+
             <div className="verify-brand">
                 <div className="verify-brand-icon">
                     <Cloud size={23} />
                 </div>
+
                 <span>CloudSpace</span>
             </div>
 
             {/* Verification Card */}
+
             <div className="verify-card">
+
+                {/* Icon */}
 
                 <div className="verify-icon">
                     <Mail size={30} />
                 </div>
 
+                {/* Heading */}
+
                 <div className="verify-heading">
+
                     <h1>Verify your email</h1>
 
                     <p>
@@ -212,12 +325,18 @@ function VerifyEmail() {
                     </p>
 
                     <strong>{email}</strong>
+
                 </div>
+
+                {/* OTP Form */}
 
                 <form onSubmit={handleVerify}>
 
-                    {/* OTP Inputs */}
-                    <div className="otp-container">
+                    <div
+                        className="otp-container"
+                        role="group"
+                        aria-label="Enter your six-digit email verification code"
+                    >
 
                         {otp.map((digit, index) => (
                             <input
@@ -227,9 +346,13 @@ function VerifyEmail() {
                                 }}
                                 type="text"
                                 inputMode="numeric"
-                                autoComplete={index === 0 ? "one-time-code" : "off"}
-                                maxLength="1"
+                                autoComplete={
+                                    index === 0 ? "one-time-code" : "off"
+                                }
+                                pattern="[0-9]*"
+                                maxLength={6}
                                 value={digit}
+                                disabled={loading || isVerified}
                                 onChange={(e) =>
                                     handleOtpChange(index, e.target.value)
                                 }
@@ -238,66 +361,112 @@ function VerifyEmail() {
                                 }
                                 onPaste={handlePaste}
                                 aria-label={`OTP digit ${index + 1}`}
+                                aria-invalid={Boolean(error)}
                                 className="otp-input"
                             />
                         ))}
 
                     </div>
 
-                    {/* Error Message */}
+                    {/* Error */}
+
                     {error && (
-                        <div className="verify-error" role="alert">
+                        <div
+                            className="verify-error"
+                            role="alert"
+                            aria-live="assertive"
+                        >
                             {error}
                         </div>
                     )}
 
-                    {/* Success Message */}
+                    {/* Success */}
+
                     {success && (
-                        <div className="verify-success" role="status">
+                        <div
+                            className="verify-success"
+                            role="status"
+                            aria-live="polite"
+                        >
                             <CheckCircle size={17} />
+
                             <span>{success}</span>
                         </div>
                     )}
 
                     {/* Verify Button */}
+
                     <button
                         type="submit"
                         className="verify-submit-btn"
-                        disabled={loading || !!success}
+                        disabled={
+                            loading ||
+                            resending ||
+                            isVerified ||
+                            otp.join("").length !== 6
+                        }
                     >
                         {loading
                             ? "Verifying..."
-                            : "Verify Email"
+                            : isVerified
+                                ? "Email Verified"
+                                : "Verify Email"
                         }
                     </button>
 
                 </form>
 
                 {/* Resend OTP */}
+
                 <div className="resend-section">
 
                     <p>Didn't receive the code?</p>
 
                     {countdown > 0 ? (
+
                         <span className="resend-timer">
                             Resend code in {countdown}s
                         </span>
+
                     ) : (
+
                         <button
                             type="button"
                             className="resend-btn"
                             onClick={handleResendOtp}
-                            disabled={resending}
+                            disabled={
+                                resending ||
+                                loading ||
+                                isVerified
+                            }
                         >
-                            <RefreshCw size={15} />
-                            {resending ? "Sending..." : "Resend Code"}
+                            <RefreshCw
+                                size={15}
+                                className={resending ? "resend-spinning" : ""}
+                            />
+
+                            {resending
+                                ? "Sending..."
+                                : "Resend Code"
+                            }
+
                         </button>
+
                     )}
 
                 </div>
 
                 {/* Back to Registration */}
-                <Link to="/register" className="verify-back-link">
+
+                <Link
+                    to="/register"
+                    className="verify-back-link"
+                    onClick={() => {
+                        if (redirectTimerRef.current) {
+                            clearTimeout(redirectTimerRef.current);
+                        }
+                    }}
+                >
                     <ArrowLeft size={16} />
                     Back to registration
                 </Link>
@@ -305,6 +474,7 @@ function VerifyEmail() {
             </div>
 
             {/* Footer */}
+
             <p className="verify-footer">
                 CloudSpace © 2026 · Secure cloud storage and sharing
             </p>

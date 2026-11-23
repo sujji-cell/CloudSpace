@@ -1,7 +1,64 @@
+/* =========================================================
+   CLOUDSPACE SETTINGS — CONSOLIDATED STYLESHEET
+   Profile • Password • Notifications • Appearance
+   Two-Factor Authentication • Sessions • Login History
+
+   Keeps the existing JSX class names.
+   Supports light, dark, and system themes.
+========================================================= */
+
+/* =========================================================
+   1. SETTINGS PAGE TOKENS + BASE
+========================================================= */
+
 .settings-content {
+    --settings-card: #ffffff;
+    --settings-card-secondary: #f8f9fc;
+    --settings-input: #ffffff;
+
+    --settings-heading: #20212a;
+    --settings-text: #444650;
+    --settings-muted: #9295a0;
+
+    --settings-border: #e8eaf0;
+    --settings-divider: #eff0f4;
+    --settings-hover: #f5f6fb;
+    --settings-disabled: #f2f3f6;
+
+    --settings-success-bg: #edfaf2;
+    --settings-success-text: #20834a;
+    --settings-success-border: #ccefd9;
+
+    --settings-error-bg: #fff1f1;
+    --settings-error-text: #d04444;
+    --settings-error-border: #f4d0d0;
+
+    --settings-accent: var(--accent-color, #4169e1);
+    --settings-accent-hover: var(--accent-hover, #3156cb);
+    --settings-accent-soft: var(--accent-soft, #f1f4ff);
+    --settings-accent-text: var(--accent-text, #3156cb);
+
+    --security-surface: var(--settings-card);
+    --security-surface-secondary: var(--settings-card-secondary);
+    --security-text: var(--settings-heading);
+    --security-muted: var(--settings-muted);
+    --security-border: var(--settings-border);
+    --security-divider: var(--settings-divider);
+    --security-hover: var(--settings-hover);
+    --security-accent: var(--settings-accent);
+
+    width: 100%;
     max-width: 1500px;
     margin: 0 auto;
     padding: 38px;
+    color: var(--settings-heading);
+    box-sizing: border-box;
+}
+
+.settings-content *,
+.settings-content *::before,
+.settings-content *::after {
+    box-sizing: border-box;
 }
 
 .settings-heading {
@@ -9,50 +66,60 @@
 }
 
 .settings-heading h1 {
+    margin: 0;
+    color: var(--settings-heading);
     font-size: 26px;
     font-weight: 650;
     letter-spacing: -0.8px;
-    color: #20212a;
 }
 
 .settings-heading p {
-    color: #9295a0;
+    margin: 8px 0 0;
+    color: var(--settings-muted);
     font-size: 12px;
-    margin-top: 8px;
+    line-height: 1.6;
 }
 
-/* Settings Section */
+/* =========================================================
+   2. COMMON SETTINGS CARDS
+========================================================= */
 
 .settings-section {
-    background: #ffffff;
-    border: 1px solid #eaebef;
-    border-radius: 12px;
-    padding: 28px;
+    width: 100%;
     max-width: 950px;
+    padding: 28px;
+    background: var(--settings-card);
+    border: 1px solid var(--settings-border);
+    border-radius: 12px;
 }
 
 .settings-section-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 16px;
     padding-bottom: 22px;
     margin-bottom: 25px;
-    border-bottom: 1px solid #f0f0f3;
+    border-bottom: 1px solid var(--settings-divider);
 }
 
 .settings-section-heading h2 {
+    margin: 0;
+    color: var(--settings-heading);
     font-size: 17px;
     font-weight: 650;
-    color: #292a32;
 }
 
 .settings-section-heading p {
+    margin: 6px 0 0;
+    color: var(--settings-muted);
     font-size: 12px;
-    color: #9295a0;
-    margin-top: 6px;
+    line-height: 1.6;
 }
 
-/* Form Grid */
+/* =========================================================
+   3. FORMS + INPUTS
+========================================================= */
 
 .settings-form-grid {
     display: grid;
@@ -62,155 +129,60 @@
 
 .settings-form-group {
     display: flex;
+    min-width: 0;
     flex-direction: column;
     gap: 9px;
 }
 
 .settings-form-group label {
+    color: var(--settings-text);
     font-size: 12px;
     font-weight: 600;
-    color: #444650;
 }
 
 .settings-form-group input {
     width: 100%;
+    min-width: 0;
     height: 43px;
     padding: 0 13px;
-    border: 1px solid #e5e6eb;
+    color: var(--settings-heading);
+    background: var(--settings-input);
+    border: 1px solid var(--settings-border);
     border-radius: 7px;
     outline: none;
+    font: inherit;
     font-size: 12px;
-    color: #30313a;
-    background: #ffffff;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.settings-form-group input::placeholder {
+    color: var(--settings-muted);
+}
+
 .settings-form-group input:focus {
-    border-color: #4169e1;
-    box-shadow: 0 0 0 3px rgba(65, 105, 225, 0.09);
+    border-color: var(--settings-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--settings-accent) 13%, transparent);
 }
 
 .settings-form-group input:disabled {
-    background: #f7f7f9;
-    color: #9295a0;
+    color: var(--settings-muted);
+    background: var(--settings-disabled);
     cursor: not-allowed;
 }
 
 .settings-form-group small {
+    color: var(--settings-muted);
     font-size: 10px;
-    color: #9295a0;
+    line-height: 1.5;
 }
 
-/* Form Actions */
-
-.settings-form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 30px;
-    padding-top: 22px;
-    border-top: 1px solid #f0f0f3;
-}
-
-.settings-form-actions button {
-    height: 39px;
-    padding: 0 19px;
-    border-radius: 7px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s ease;
-}
-
-.settings-cancel-btn {
-    background: #ffffff;
-    border: 1px solid #e5e6eb;
-    color: #555761;
-}
-
-.settings-cancel-btn:hover {
-    background: #f7f7f9;
-}
-
-.settings-save-btn {
-    background: #4169e1;
-    border: 1px solid #4169e1;
-    color: #ffffff;
-}
-
-.settings-save-btn:hover {
-    background: #3156cb;
-}
-
-.settings-form-actions button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* Feedback Messages */
-
-.settings-success,
-.settings-error {
-    padding: 11px 13px;
-    border-radius: 7px;
-    font-size: 12px;
-    margin-top: 22px;
-}
-
-.settings-success {
-    background: #edfaf2;
-    color: #20834a;
-    border: 1px solid #ccefd9;
-}
-
-.settings-error {
-    background: #fff1f1;
-    color: #d04444;
-    border: 1px solid #f4d0d0;
-}
-
-/* Responsive Design */
-
-@media (max-width: 768px) {
-
-    .settings-content {
-        padding: 25px 18px;
-    }
-
-    .settings-section {
-        padding: 20px;
-    }
-
-    .settings-form-grid {
-        grid-template-columns: 1fr;
-        gap: 19px;
-    }
-
-}
-
-@media (max-width: 480px) {
-
-    .settings-form-actions {
-        flex-direction: column-reverse;
-    }
-
-    .settings-form-actions button {
-        width: 100%;
-    }
-
-}
-
-/* Security Section */
-
-.security-section {
-    margin-top: 25px;
-}
+/* Password input with visibility toggle */
 
 .settings-password-fields {
     display: flex;
+    max-width: 550px;
     flex-direction: column;
     gap: 22px;
-    max-width: 550px;
 }
 
 .password-input-wrapper {
@@ -229,74 +201,147 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: none;
-    background: transparent;
-    color: #9295a0;
-    cursor: pointer;
     padding: 4px;
+    color: var(--settings-muted);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
 }
 
 .password-input-wrapper button:hover {
-    color: #4169e1;
+    color: var(--settings-accent);
 }
 
-/* ============================= */
-/* NOTIFICATION SETTINGS */
-/* ============================= */
+/* =========================================================
+   4. FORM ACTIONS + FEEDBACK
+========================================================= */
+
+.settings-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 22px;
+    margin-top: 30px;
+    border-top: 1px solid var(--settings-divider);
+}
+
+.settings-form-actions button {
+    min-height: 39px;
+    padding: 0 19px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.settings-form-actions button:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.settings-cancel-btn {
+    color: var(--settings-text);
+    background: var(--settings-card);
+    border: 1px solid var(--settings-border);
+}
+
+.settings-cancel-btn:hover {
+    background: var(--settings-hover);
+}
+
+.settings-save-btn {
+    color: #ffffff;
+    background: var(--settings-accent);
+    border: 1px solid var(--settings-accent);
+}
+
+.settings-save-btn:hover {
+    background: var(--settings-accent-hover);
+    border-color: var(--settings-accent-hover);
+}
+
+.settings-form-actions button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.settings-success,
+.settings-error {
+    padding: 11px 13px;
+    margin-top: 22px;
+    border: 1px solid;
+    border-radius: 7px;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.settings-success {
+    color: var(--settings-success-text);
+    background: var(--settings-success-bg);
+    border-color: var(--settings-success-border);
+}
+
+.settings-error {
+    color: var(--settings-error-text);
+    background: var(--settings-error-bg);
+    border-color: var(--settings-error-border);
+}
+
+/* =========================================================
+   5. NOTIFICATION PREFERENCES
+========================================================= */
 
 .notification-section {
     margin-bottom: 30px;
 }
 
 .notification-loading {
-    font-size: 13px;
-    color: #9295a0;
     padding: 20px 0;
+    color: var(--settings-muted);
+    font-size: 13px;
 }
-
-/* Enable / Disable All */
 
 .notification-global-actions {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 15px;
     padding: 16px 18px;
-    background: #f8f9fc;
-    border: 1px solid #eceef3;
-    border-radius: 9px;
     margin-bottom: 28px;
+    background: var(--settings-card-secondary);
+    border: 1px solid var(--settings-border);
+    border-radius: 9px;
 }
 
 .notification-global-actions > span {
+    color: var(--settings-text);
     font-size: 12px;
     font-weight: 600;
-    color: #444650;
 }
 
 .notification-global-actions > div {
     display: flex;
+    flex-wrap: wrap;
     gap: 9px;
 }
 
 .notification-global-actions button {
     padding: 8px 13px;
-    border: 1px solid #e3e5eb;
+    color: var(--settings-text);
+    background: var(--settings-card);
+    border: 1px solid var(--settings-border);
     border-radius: 6px;
-    background: #ffffff;
-    color: #555761;
     font-size: 11px;
     font-weight: 600;
     cursor: pointer;
-    transition: 0.2s ease;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .notification-global-actions button:hover {
-    border-color: #4169e1;
-    color: #4169e1;
-    background: #f4f6ff;
+    color: var(--settings-accent);
+    background: var(--settings-accent-soft);
+    border-color: var(--settings-accent);
 }
-
-/* Notification Categories */
 
 .notification-category {
     margin-bottom: 30px;
@@ -307,7 +352,7 @@
     align-items: center;
     gap: 12px;
     margin-bottom: 15px;
-    color: #4169e1;
+    color: var(--settings-accent);
 }
 
 .notification-category-heading > div {
@@ -317,17 +362,18 @@
 }
 
 .notification-category-heading h3 {
+    margin: 0;
+    color: var(--settings-heading);
     font-size: 14px;
     font-weight: 650;
-    color: #30313a;
 }
 
 .notification-category-heading p {
+    margin: 0;
+    color: var(--settings-muted);
     font-size: 11px;
-    color: #9295a0;
+    line-height: 1.5;
 }
-
-/* Individual Notification Option */
 
 .notification-option {
     display: flex;
@@ -335,23 +381,24 @@
     justify-content: space-between;
     gap: 20px;
     padding: 17px 15px;
-    border-top: 1px solid #f0f0f3;
+    border-top: 1px solid var(--settings-divider);
 }
 
 .notification-option h4 {
+    margin: 0 0 6px;
+    color: var(--settings-text);
     font-size: 12px;
     font-weight: 600;
-    color: #444650;
-    margin-bottom: 6px;
 }
 
 .notification-option p {
+    margin: 0;
+    color: var(--settings-muted);
     font-size: 11px;
-    color: #9295a0;
     line-height: 1.5;
 }
 
-/* Toggle Switch */
+/* Accessible toggle */
 
 .notification-switch {
     position: relative;
@@ -362,35 +409,36 @@
 }
 
 .notification-switch input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
     opacity: 0;
-    width: 0;
-    height: 0;
 }
 
 .notification-slider {
     position: absolute;
-    cursor: pointer;
     inset: 0;
     background: #d9dbe2;
     border-radius: 30px;
-    transition: 0.25s ease;
+    cursor: pointer;
+    transition: background 0.25s ease;
 }
 
 .notification-slider::before {
     position: absolute;
     content: "";
-    height: 17px;
     width: 17px;
+    height: 17px;
     left: 3px;
     bottom: 3px;
     background: #ffffff;
     border-radius: 50%;
-    transition: 0.25s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    transition: transform 0.25s ease;
 }
 
 .notification-switch input:checked + .notification-slider {
-    background: #4169e1;
+    background: var(--settings-accent);
 }
 
 .notification-switch input:checked + .notification-slider::before {
@@ -398,38 +446,18 @@
 }
 
 .notification-switch input:focus-visible + .notification-slider {
-    outline: 3px solid rgba(65, 105, 225, 0.2);
-    outline-offset: 2px;
+    outline: 3px solid color-mix(in srgb, var(--settings-accent) 25%, transparent);
+    outline-offset: 3px;
 }
 
 .notification-switch input:disabled + .notification-slider {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
 }
 
-/* Responsive */
-
-@media (max-width: 600px) {
-
-    .notification-global-actions {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 13px;
-    }
-
-    .notification-option {
-        padding: 16px 5px;
-    }
-
-    .notification-option p {
-        max-width: 230px;
-    }
-
-}
-
-/* ==========================================
-   APPEARANCE SETTINGS - REDESIGNED
-========================================== */
+/* =========================================================
+   6. APPEARANCE SETTINGS
+========================================================= */
 
 .appearance-section {
     margin-bottom: 30px;
@@ -441,25 +469,27 @@
 
 .appearance-setting-heading {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    gap: 15px;
     margin-bottom: 16px;
 }
 
 .appearance-setting-heading h3 {
+    margin: 0 0 5px;
+    color: var(--settings-heading);
     font-size: 14px;
     font-weight: 650;
-    color: #30313a;
-    margin-bottom: 5px;
 }
 
 .appearance-setting-heading p {
+    margin: 0;
+    color: var(--settings-muted);
     font-size: 11px;
-    color: #9295a0;
     line-height: 1.5;
 }
 
-/* THEME CARDS */
+/* Theme cards */
 
 .appearance-choice-grid {
     display: grid;
@@ -469,33 +499,34 @@
 
 .appearance-choice-card {
     position: relative;
-    min-height: 125px;
     display: flex;
+    min-width: 0;
+    min-height: 125px;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
     gap: 9px;
     padding: 18px;
-    background: #ffffff;
-    border: 1px solid #e8eaf0;
-    border-radius: 12px;
-    color: #555761;
+    color: var(--settings-text);
     text-align: left;
+    background: var(--settings-card);
+    border: 1px solid var(--settings-border);
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
 }
 
 .appearance-choice-card:hover {
-    border-color: #a9b9f5;
-    background: #fafbff;
+    background: var(--settings-hover);
+    border-color: color-mix(in srgb, var(--settings-accent) 45%, var(--settings-border));
     transform: translateY(-2px);
 }
 
 .appearance-choice-card.active {
-    border: 1.5px solid #4169e1;
-    background: #f5f7ff;
-    color: #4169e1;
-    box-shadow: 0 3px 12px rgba(65, 105, 225, 0.08);
+    color: var(--settings-accent-text);
+    background: var(--settings-accent-soft);
+    border-color: var(--settings-accent);
+    box-shadow: 0 3px 12px color-mix(in srgb, var(--settings-accent) 10%, transparent);
 }
 
 .appearance-choice-card svg {
@@ -508,18 +539,18 @@
 }
 
 .appearance-choice-card small {
+    color: var(--settings-muted);
     font-size: 10px;
-    color: #9295a0;
     font-weight: 400;
 }
 
-/* ACCENT COLORS */
+/* Accent color choices */
 
 .appearance-color-options {
     display: flex;
     align-items: center;
-    gap: 25px;
     flex-wrap: wrap;
+    gap: 25px;
     padding: 5px 0;
 }
 
@@ -530,39 +561,40 @@
     gap: 10px;
     padding: 5px;
     background: transparent;
-    border: none;
+    border: 0;
     cursor: pointer;
 }
 
 .appearance-color-option > span {
     width: 32px;
     height: 32px;
+    border: 2px solid transparent;
     border-radius: 50%;
     outline: 2px solid transparent;
-    outline-offset: 4px;
-    transition: all 0.2s ease;
+    outline-offset: 3px;
+    transition: transform 0.2s ease, outline-color 0.2s ease;
 }
 
 .appearance-color-option:hover > span {
-    transform: scale(1.12);
+    transform: scale(1.1);
 }
 
 .appearance-color-option.active > span {
-    outline-color: #30313a;
+    outline-color: var(--settings-accent);
 }
 
 .appearance-color-option small {
+    color: var(--settings-muted);
     font-size: 11px;
-    color: #666873;
     font-weight: 500;
 }
 
 .appearance-color-option.active small {
-    color: #30313a;
+    color: var(--settings-accent-text);
     font-weight: 650;
 }
 
-/* SIDEBAR AND DENSITY OPTIONS */
+/* Sidebar / density radio options */
 
 .appearance-radio-options {
     display: grid;
@@ -576,402 +608,39 @@
     gap: 11px;
     min-height: 52px;
     padding: 14px 16px;
-    border: 1px solid #e8eaf0;
+    background: var(--settings-card);
+    border: 1px solid var(--settings-border);
     border-radius: 9px;
-    background: #ffffff;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .appearance-radio-options label:hover {
-    border-color: #a9b9f5;
-    background: #fafbff;
+    background: var(--settings-hover);
+    border-color: color-mix(in srgb, var(--settings-accent) 45%, var(--settings-border));
 }
 
 .appearance-radio-options input {
     width: 15px;
     height: 15px;
-    accent-color: #4169e1;
+    margin: 0;
+    accent-color: var(--settings-accent);
     cursor: pointer;
 }
 
 .appearance-radio-options label span {
+    color: var(--settings-heading);
     font-size: 12px;
     font-weight: 550;
-    color: #444650;
 }
 
-/* RESPONSIVE */
-
-@media (max-width: 650px) {
-    .appearance-choice-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .appearance-choice-card {
-        min-height: 105px;
-    }
-}
-
-@media (max-width: 480px) {
-    .appearance-radio-options {
-        grid-template-columns: 1fr;
-    }
-
-    .appearance-color-options {
-        gap: 17px;
-    }
-}
-
-/* ==========================================
-   TWO-FACTOR AUTHENTICATION SETTINGS
-========================================== */
+/* =========================================================
+   7. TWO-FACTOR AUTHENTICATION
+========================================================= */
 
 .two-factor-settings {
-    margin-top: 30px;
-    padding: 28px;
-    border: 1px solid var(--border-color, #33343d);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.025);
-}
-
-.two-factor-heading {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 15px;
-    margin-bottom: 24px;
-}
-
-.two-factor-heading h3 {
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0 0 8px;
-}
-
-.two-factor-heading p {
-    font-size: 13px;
-    color: var(--text-secondary, #9295a3);
-    line-height: 1.6;
-    margin: 0;
-    max-width: 600px;
-}
-
-/* Protection Status */
-
-.two-factor-status {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 17px 20px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.045);
-    margin-bottom: 16px;
-    font-size: 14px;
-    color: var(--text-primary, #f1f1f5);
-}
-
-.two-factor-enabled,
-.two-factor-disabled {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 20px;
-}
-
-.two-factor-enabled {
-    color: #35d49a;
-    background: rgba(53, 212, 154, 0.12);
-}
-
-.two-factor-disabled {
-    color: #ff7373;
-    background: rgba(255, 115, 115, 0.12);
-}
-
-/* Description */
-
-.two-factor-description {
-    margin-bottom: 22px;
-}
-
-.two-factor-description p {
-    font-size: 13px;
-    color: var(--text-secondary, #9295a3);
-    line-height: 1.6;
-    margin: 0;
-}
-
-/* Password Input */
-
-.two-factor-settings .settings-form-group {
-    max-width: 480px;
-    margin-bottom: 20px;
-}
-
-.two-factor-settings .settings-form-group label {
-    display: block;
-    margin-bottom: 9px;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.two-factor-settings .settings-form-group input {
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.two-factor-settings .settings-form-group small {
-    display: block;
-    margin-top: 8px;
-    font-size: 11px;
-    color: var(--text-secondary, #9295a3);
-}
-
-/* Feedback Messages */
-
-.two-factor-settings .settings-success,
-.two-factor-settings .settings-error {
-    padding: 12px 15px;
-    border-radius: 8px;
-    font-size: 13px;
-    margin-bottom: 18px;
-}
-
-/* Action Button */
-
-.two-factor-settings .settings-form-actions {
-    display: flex;
-    justify-content: flex-end;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-color, #33343d);
-}
-
-.two-factor-settings .settings-save-btn {
-    min-width: 230px;
-}
-
-.two-factor-settings .settings-save-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* Responsive */
-
-@media (max-width: 600px) {
-    .two-factor-settings {
-        padding: 18px;
-    }
-
-    .two-factor-heading h3 {
-        font-size: 16px;
-    }
-
-    .two-factor-settings .settings-form-actions {
-        justify-content: stretch;
-    }
-
-    .two-factor-settings .settings-save-btn {
-        width: 100%;
-        min-width: unset;
-    }
-}
-
-/* =====================================================
-   CLOUDSPACE SETTINGS — COMPLETE THEME SYSTEM
-   Supports Light, Dark, System, Accent Colors
-===================================================== */
-
-/* -----------------------------------------------------
-   1. LIGHT THEME — DEFAULT
------------------------------------------------------ */
-
-.settings-content {
-    --settings-bg: #ffffff;
-    --settings-card: #ffffff;
-    --settings-card-secondary: #f8f9fc;
-    --settings-input: #ffffff;
-
-    --settings-heading: #20212a;
-    --settings-text: #444650;
-    --settings-muted: #9295a0;
-
-    --settings-border: #e8eaf0;
-    --settings-divider: #eff0f4;
-
-    --settings-hover: #f5f6fb;
-    --settings-disabled: #f2f3f6;
-
-    --settings-success-bg: #edfaf2;
-    --settings-success-text: #20834a;
-    --settings-success-border: #ccefd9;
-
-    --settings-error-bg: #fff1f1;
-    --settings-error-text: #d04444;
-    --settings-error-border: #f4d0d0;
-
-    color: var(--settings-heading);
-}
-
-/* Page */
-
-.settings-heading h1 {
-    color: var(--settings-heading);
-}
-
-.settings-heading p {
-    color: var(--settings-muted);
-}
-
-/* Main cards */
-
-.settings-section {
-    background: var(--settings-card);
-    border-color: var(--settings-border);
-}
-
-/* Section headings */
-
-.settings-section-heading {
-    border-color: var(--settings-divider);
-}
-
-.settings-section-heading h2,
-.settings-form-group label {
-    color: var(--settings-heading);
-}
-
-/* Inputs */
-
-.settings-form-group input {
-    background: var(--settings-input);
-    color: var(--settings-heading);
-    border-color: var(--settings-border);
-}
-
-.settings-form-group input::placeholder {
-    color: var(--settings-muted);
-}
-
-.settings-form-group input:disabled {
-    background: var(--settings-disabled);
-    color: var(--settings-muted);
-}
-
-.settings-form-group small {
-    color: var(--settings-muted);
-}
-
-/* Form actions */
-
-.settings-form-actions {
-    border-color: var(--settings-divider);
-}
-
-.settings-cancel-btn {
-    background: var(--settings-card);
-    border-color: var(--settings-border);
-    color: var(--settings-text);
-}
-
-.settings-cancel-btn:hover {
-    background: var(--settings-hover);
-}
-
-/* Feedback */
-
-.settings-success {
-    background: var(--settings-success-bg);
-    color: var(--settings-success-text);
-    border-color: var(--settings-success-border);
-}
-
-.settings-error {
-    background: var(--settings-error-bg);
-    color: var(--settings-error-text);
-    border-color: var(--settings-error-border);
-}
-
-/* Notifications */
-
-.notification-global-actions {
-    background: var(--settings-card-secondary);
-    border-color: var(--settings-border);
-}
-
-.notification-global-actions > span {
-    color: var(--settings-text);
-}
-
-.notification-global-actions button {
-    background: var(--settings-card);
-    border-color: var(--settings-border);
-    color: var(--settings-text);
-}
-
-.notification-option {
-    border-color: var(--settings-divider);
-}
-
-.notification-category-heading h3,
-.notification-option h4 {
-    color: var(--settings-heading);
-}
-
-.notification-option p,
-.notification-category-heading p {
-    color: var(--settings-muted);
-}
-
-/* Appearance cards */
-
-.appearance-choice-card,
-.appearance-radio-options label {
-    background: var(--settings-card);
-    border-color: var(--settings-border);
-    color: var(--settings-text);
-}
-
-.appearance-choice-card:hover,
-.appearance-radio-options label:hover {
-    background: var(--settings-hover);
-}
-
-.appearance-setting-heading h3,
-.appearance-radio-options label span {
-    color: var(--settings-heading);
-}
-
-.appearance-setting-heading p,
-.appearance-choice-card small {
-    color: var(--settings-muted);
-}
-
-.appearance-choice-card.active {
-    background: var(--accent-soft);
-    border-color: var(--accent-color);
-    color: var(--accent-text);
-}
-
-.appearance-color-option.active > span {
-    outline-color: var(--accent-color);
-}
-
-.appearance-color-option.active small {
-    color: var(--accent-text);
-}
-
-/* -----------------------------------------------------
-   2. TWO-FACTOR AUTHENTICATION
------------------------------------------------------ */
-
-.two-factor-settings {
-    margin-top: 30px;
     padding: 24px;
+    margin-top: 30px;
     background: var(--settings-card-secondary);
     border: 1px solid var(--settings-border);
     border-radius: 12px;
@@ -979,48 +648,43 @@
 
 .two-factor-heading {
     display: flex;
-    justify-content: space-between;
     align-items: flex-start;
+    justify-content: space-between;
     gap: 15px;
     margin-bottom: 22px;
 }
 
 .two-factor-heading h3 {
+    margin: 0 0 7px;
     color: var(--settings-heading);
     font-size: 16px;
     font-weight: 650;
-    margin-bottom: 7px;
 }
 
 .two-factor-heading p {
+    max-width: 520px;
+    margin: 0;
     color: var(--settings-muted);
     font-size: 12px;
     line-height: 1.7;
-    max-width: 520px;
 }
 
 .two-factor-heading > svg {
     flex-shrink: 0;
-    color: var(--accent-color);
+    color: var(--settings-accent);
 }
-
-/* Status card */
 
 .two-factor-status {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-
     padding: 15px 17px;
-
+    margin-bottom: 17px;
+    color: var(--settings-text);
     background: var(--settings-card);
     border: 1px solid var(--settings-border);
     border-radius: 9px;
-
-    margin-bottom: 17px;
-
-    color: var(--settings-text);
     font-size: 12px;
     font-weight: 600;
 }
@@ -1030,10 +694,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
+    gap: 7px;
     padding: 6px 12px;
     border-radius: 20px;
-
     font-size: 11px;
     font-weight: 650;
     white-space: nowrap;
@@ -1049,19 +712,16 @@
     background: #fff0f0;
 }
 
-/* Description */
-
 .two-factor-description {
     margin-bottom: 20px;
 }
 
 .two-factor-description p {
+    margin: 0;
     color: var(--settings-muted);
     font-size: 12px;
     line-height: 1.7;
 }
-
-/* Password field */
 
 .two-factor-settings .settings-form-group {
     max-width: 460px;
@@ -1082,39 +742,574 @@
     color: var(--settings-muted);
 }
 
-/* Feedback messages */
-
 .two-factor-settings .settings-success,
 .two-factor-settings .settings-error {
     margin-top: 12px;
     margin-bottom: 15px;
 }
 
-/* Button */
-
 .two-factor-settings .settings-form-actions {
-    margin-top: 20px;
     padding-top: 18px;
+    margin-top: 20px;
     border-color: var(--settings-divider);
 }
 
 .two-factor-settings .settings-save-btn {
     min-width: 225px;
-    background: var(--accent-color);
-    border-color: var(--accent-color);
 }
 
-.two-factor-settings .settings-save-btn:hover {
-    background: var(--accent-hover);
-    border-color: var(--accent-hover);
+/* =========================================================
+   8. SESSION MANAGEMENT + LOGIN HISTORY
+========================================================= */
+
+.session-management-section,
+.login-history-section {
+    position: relative;
+    padding: 26px;
+    margin-top: 25px;
+    background: var(--security-surface);
+    border: 1px solid var(--security-border);
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(20, 25, 45, 0.035);
+    animation: securityFadeIn 0.45s ease both;
+    transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-/* -----------------------------------------------------
-   3. DARK THEME
------------------------------------------------------ */
+.session-management-section:hover,
+.login-history-section:hover {
+    box-shadow: 0 5px 18px rgba(20, 25, 45, 0.045);
+}
+
+.session-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 24px;
+}
+
+.session-section-heading h3 {
+    margin: 0 0 7px;
+    color: var(--security-text);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.35px;
+}
+
+.session-section-heading p {
+    margin: 0;
+    color: var(--security-muted);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+/* Refresh */
+
+.session-refresh-btn {
+    display: flex;
+    width: 39px;
+    height: 39px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--security-muted);
+    background: var(--security-surface-secondary);
+    border: 1px solid var(--security-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.session-refresh-btn:hover {
+    color: var(--security-accent);
+    background: var(--security-hover);
+    border-color: var(--security-accent);
+    transform: rotate(12deg);
+}
+
+.session-refresh-btn:active {
+    transform: scale(0.92);
+}
+
+.session-refresh-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.session-spinning {
+    animation: sessionRotate 0.9s linear infinite;
+}
+
+@keyframes sessionRotate {
+    to { transform: rotate(360deg); }
+}
+
+/* Session summary */
+
+.session-summary {
+    display: inline-flex;
+    min-width: 185px;
+    align-items: center;
+    gap: 13px;
+    padding: 13px 17px;
+    margin-bottom: 22px;
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--security-accent) 9%, var(--security-surface)),
+        var(--security-surface-secondary)
+    );
+    border: 1px solid color-mix(in srgb, var(--security-accent) 18%, var(--security-border));
+    border-radius: 12px;
+    transition: transform 0.25s ease;
+}
+
+.session-summary:hover {
+    transform: translateY(-2px);
+}
+
+.session-summary-icon {
+    display: flex;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    color: var(--security-accent);
+    background: color-mix(in srgb, var(--security-accent) 13%, transparent);
+    border-radius: 11px;
+}
+
+.session-summary > div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.session-summary strong {
+    color: var(--security-text);
+    font-size: 21px;
+    font-weight: 750;
+    line-height: 1;
+}
+
+.session-summary span {
+    color: var(--security-muted);
+    font-size: 11px;
+    font-weight: 550;
+}
+
+/* Active session cards */
+
+.active-session-list {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+
+.active-session-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    padding: 19px;
+    background: var(--security-surface-secondary);
+    border: 1px solid var(--security-border);
+    border-radius: 13px;
+    animation: securitySlideIn 0.4s ease both;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.active-session-card:nth-child(2) { animation-delay: 0.06s; }
+.active-session-card:nth-child(3) { animation-delay: 0.12s; }
+.active-session-card:nth-child(4) { animation-delay: 0.18s; }
+
+.active-session-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--security-accent) 45%, var(--security-border));
+    box-shadow: 0 7px 20px rgba(30, 40, 80, 0.07);
+}
+
+.active-session-icon {
+    display: flex;
+    width: 53px;
+    height: 53px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--security-accent);
+    background: color-mix(in srgb, var(--security-accent) 11%, var(--security-surface));
+    border: 1px solid color-mix(in srgb, var(--security-accent) 15%, var(--security-border));
+    border-radius: 13px;
+    transition: transform 0.25s ease;
+}
+
+.active-session-card:hover .active-session-icon {
+    transform: scale(1.05);
+}
+
+.active-session-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.active-session-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 7px;
+}
+
+.active-session-title h4 {
+    margin: 0;
+    color: var(--security-text);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.active-session-details > p {
+    margin: 0 0 12px;
+    color: var(--security-muted);
+    font-size: 12px;
+}
+
+.current-device-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 9px;
+    color: #168653;
+    background: rgba(34, 197, 94, 0.10);
+    border: 1px solid rgba(34, 197, 94, 0.20);
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.current-device-badge svg {
+    animation: securityPulse 2s ease-in-out infinite;
+}
+
+@keyframes securityPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.65; transform: scale(0.9); }
+}
+
+.active-session-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 13px;
+}
+
+.active-session-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--security-muted);
+    font-size: 11px;
+}
+
+.active-session-meta svg {
+    flex-shrink: 0;
+    color: var(--security-muted);
+}
+
+/* Revoke actions */
+
+.revoke-session-btn {
+    display: inline-flex;
+    min-width: 92px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 9px 13px;
+    flex-shrink: 0;
+    color: #dc4545;
+    background: rgba(239, 68, 68, 0.07);
+    border: 1px solid rgba(239, 68, 68, 0.18);
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.revoke-session-btn:hover {
+    background: rgba(239, 68, 68, 0.14);
+    border-color: rgba(239, 68, 68, 0.38);
+    transform: translateY(-1px);
+}
+
+.revoke-session-btn:active {
+    transform: scale(0.96);
+}
+
+.revoke-session-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.revoke-others-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 19px;
+    margin-top: 22px;
+    background: color-mix(in srgb, #ef4444 5%, var(--security-surface));
+    border: 1px solid rgba(239, 68, 68, 0.17);
+    border-radius: 12px;
+}
+
+.revoke-others-container h4 {
+    margin: 0 0 6px;
+    color: var(--security-text);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.revoke-others-container p {
+    margin: 0;
+    color: var(--security-muted);
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.revoke-others-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 15px;
+    flex-shrink: 0;
+    color: #ffffff;
+    background: #dc4545;
+    border: 1px solid #dc4545;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.revoke-others-btn:hover {
+    background: #c93434;
+    box-shadow: 0 5px 14px rgba(220, 69, 69, 0.20);
+    transform: translateY(-1px);
+}
+
+.revoke-others-btn:active {
+    transform: scale(0.97);
+}
+
+.revoke-others-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* =========================================================
+   9. LOGIN HISTORY TIMELINE
+========================================================= */
+
+.login-history-section .session-section-heading {
+    margin-bottom: 28px;
+}
+
+.login-history-list {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.login-history-list::before {
+    position: absolute;
+    content: "";
+    top: 24px;
+    bottom: 24px;
+    left: 21px;
+    width: 2px;
+    background: linear-gradient(
+        to bottom,
+        var(--security-accent),
+        var(--security-divider),
+        transparent
+    );
+    opacity: 0.3;
+}
+
+.login-history-item {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 17px 15px;
+    border-bottom: 1px solid var(--security-divider);
+    border-radius: 10px;
+    animation: securitySlideIn 0.4s ease both;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.login-history-item:nth-child(2) { animation-delay: 0.05s; }
+.login-history-item:nth-child(3) { animation-delay: 0.10s; }
+.login-history-item:nth-child(4) { animation-delay: 0.15s; }
+.login-history-item:nth-child(5) { animation-delay: 0.20s; }
+
+.login-history-item:last-child {
+    border-bottom: 0;
+}
+
+.login-history-item:hover {
+    background: var(--security-hover);
+    transform: translateX(2px);
+}
+
+.login-history-icon {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: 43px;
+    height: 43px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--security-surface);
+    border: 1px solid var(--security-border);
+    border-radius: 12px;
+    transition: transform 0.2s ease;
+}
+
+.login-history-item:hover .login-history-icon {
+    transform: scale(1.06);
+}
+
+.login-history-icon.login {
+    color: #16a36a;
+    background: rgba(22, 163, 106, 0.09);
+    border-color: rgba(22, 163, 106, 0.17);
+}
+
+.login-history-icon.login_failed {
+    color: #dc4545;
+    background: rgba(220, 69, 69, 0.09);
+    border-color: rgba(220, 69, 69, 0.17);
+}
+
+.login-history-icon.suspicious_login_alert {
+    color: #9333ea;
+    background: rgba(147, 51, 234, 0.10);
+    border-color: rgba(147, 51, 234, 0.22);
+}
+
+.login-history-icon.session_revoked {
+    color: #d97706;
+    background: rgba(217, 119, 6, 0.09);
+    border-color: rgba(217, 119, 6, 0.17);
+}
+
+.login-history-icon.logout {
+    color: #64748b;
+    background: rgba(100, 116, 139, 0.09);
+    border-color: rgba(100, 116, 139, 0.17);
+}
+
+.login-history-details {
+    flex: 1;
+    min-width: 0;
+    padding-top: 2px;
+}
+
+.login-history-details h4 {
+    margin: 0 0 6px;
+    color: var(--security-text);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.login-history-details > p {
+    margin: 0 0 9px;
+    color: var(--security-muted);
+    font-size: 11px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.login-history-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.login-history-meta span {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 8px;
+    color: var(--security-muted);
+    background: var(--security-surface);
+    border: 1px solid var(--security-border);
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 550;
+}
+
+.login-history-date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    padding-top: 4px;
+    color: var(--security-muted);
+    font-size: 10px;
+}
+
+.login-history-date svg {
+    flex-shrink: 0;
+}
+
+/* Empty + loading states */
+
+.session-loading {
+    display: flex;
+    min-height: 100px;
+    align-items: center;
+    justify-content: center;
+    color: var(--security-muted);
+    font-size: 12px;
+}
+
+.session-empty {
+    display: flex;
+    min-height: 155px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 13px;
+    padding: 25px;
+    color: var(--security-muted);
+    background: var(--security-surface-secondary);
+    border: 1px dashed var(--security-border);
+    border-radius: 12px;
+}
+
+.session-empty svg {
+    opacity: 0.7;
+}
+
+.session-empty p {
+    margin: 0;
+    font-size: 12px;
+    text-align: center;
+}
+
+/* =========================================================
+   10. DARK THEME
+========================================================= */
 
 html[data-theme="dark"] .settings-content {
-    --settings-bg: #121318;
     --settings-card: #1b1c23;
     --settings-card-secondary: #252630;
     --settings-input: #252630;
@@ -1125,7 +1320,6 @@ html[data-theme="dark"] .settings-content {
 
     --settings-border: #383945;
     --settings-divider: #30313b;
-
     --settings-hover: #30313b;
     --settings-disabled: #20212a;
 
@@ -1138,53 +1332,28 @@ html[data-theme="dark"] .settings-content {
     --settings-error-border: #63353c;
 }
 
-/* Dark status */
-
 html[data-theme="dark"] .two-factor-enabled {
-    background: rgba(53, 212, 154, 0.13);
     color: #52dba5;
+    background: rgba(53, 212, 154, 0.13);
 }
 
 html[data-theme="dark"] .two-factor-disabled {
-    background: rgba(255, 115, 115, 0.13);
     color: #ff8585;
+    background: rgba(255, 115, 115, 0.13);
 }
 
-/* Dark appearance selection */
-
-html[data-theme="dark"] .appearance-choice-card.active {
-    background: color-mix(
-        in srgb,
-        var(--accent-color) 17%,
-        #1b1c23
-    );
-
-    border-color: var(--accent-color);
-    color: var(--accent-color);
+html[data-theme="dark"] .current-device-badge {
+    color: #55d99b;
+    background: rgba(34, 197, 94, 0.13);
+    border-color: rgba(34, 197, 94, 0.24);
 }
 
-html[data-theme="dark"] .appearance-radio-options label {
-    background: var(--settings-card-secondary);
-    border-color: var(--settings-border);
-}
-
-html[data-theme="dark"] .appearance-radio-options label:hover {
-    background: var(--settings-hover);
-}
-
-/* -----------------------------------------------------
-   4. SYSTEM THEME
------------------------------------------------------ */
-
-/*
-   When the stored theme is "system", follow the
-   operating system's preferred color scheme.
-*/
+/* =========================================================
+   11. SYSTEM THEME — FOLLOW OS PREFERENCE
+========================================================= */
 
 @media (prefers-color-scheme: dark) {
-
     html[data-theme="system"] .settings-content {
-        --settings-bg: #121318;
         --settings-card: #1b1c23;
         --settings-card-secondary: #252630;
         --settings-input: #252630;
@@ -1195,7 +1364,6 @@ html[data-theme="dark"] .appearance-radio-options label:hover {
 
         --settings-border: #383945;
         --settings-divider: #30313b;
-
         --settings-hover: #30313b;
         --settings-disabled: #20212a;
 
@@ -1209,33 +1377,55 @@ html[data-theme="dark"] .appearance-radio-options label:hover {
     }
 
     html[data-theme="system"] .two-factor-enabled {
-        background: rgba(53, 212, 154, 0.13);
         color: #52dba5;
+        background: rgba(53, 212, 154, 0.13);
     }
 
     html[data-theme="system"] .two-factor-disabled {
-        background: rgba(255, 115, 115, 0.13);
         color: #ff8585;
+        background: rgba(255, 115, 115, 0.13);
     }
 
-    html[data-theme="system"] .appearance-choice-card.active {
-        background: color-mix(
-            in srgb,
-            var(--accent-color) 17%,
-            #1b1c23
-        );
-
-        border-color: var(--accent-color);
-        color: var(--accent-color);
+    html[data-theme="system"] .current-device-badge {
+        color: #55d99b;
+        background: rgba(34, 197, 94, 0.13);
+        border-color: rgba(34, 197, 94, 0.24);
     }
 }
 
-/* -----------------------------------------------------
-   5. RESPONSIVE SETTINGS
------------------------------------------------------ */
+/* =========================================================
+   12. ACCESSIBILITY + REDUCED MOTION
+========================================================= */
+
+.settings-content button:focus-visible,
+.settings-content input:focus-visible,
+.settings-content label:focus-visible {
+    outline-color: var(--settings-accent);
+}
+
+.session-refresh-btn:focus-visible,
+.revoke-session-btn:focus-visible,
+.revoke-others-btn:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--security-accent) 35%, transparent);
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .settings-content *,
+    .settings-content *::before,
+    .settings-content *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* =========================================================
+   13. RESPONSIVE — TABLET
+========================================================= */
 
 @media (max-width: 1024px) {
-
     .settings-content {
         padding: 28px;
     }
@@ -1243,11 +1433,29 @@ html[data-theme="dark"] .appearance-radio-options label:hover {
     .settings-section {
         max-width: 100%;
     }
-
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+    .session-management-section,
+    .login-history-section {
+        padding: 22px;
+    }
 
+    .active-session-card {
+        gap: 13px;
+    }
+
+    .login-history-date {
+        max-width: 155px;
+        line-height: 1.5;
+    }
+}
+
+/* =========================================================
+   14. RESPONSIVE — MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
     .settings-content {
         padding: 23px 18px;
     }
@@ -1262,20 +1470,107 @@ html[data-theme="dark"] .appearance-radio-options label:hover {
 
     .settings-form-grid {
         grid-template-columns: 1fr;
-    }
-
-    .two-factor-settings {
-        padding: 19px;
+        gap: 19px;
     }
 
     .appearance-choice-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .two-factor-settings {
+        padding: 19px;
+    }
+}
+
+@media (max-width: 650px) {
+    .appearance-choice-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .appearance-choice-card {
+        min-height: 105px;
+    }
+
+    .session-management-section,
+    .login-history-section {
+        padding: 18px;
+        border-radius: 12px;
+    }
+
+    .session-section-heading h3 {
+        font-size: 15px;
+    }
+
+    .active-session-card {
+        flex-wrap: wrap;
+        padding: 15px;
+    }
+
+    .active-session-icon {
+        width: 45px;
+        height: 45px;
+    }
+
+    .active-session-details {
+        flex-basis: calc(100% - 65px);
+    }
+
+    .active-session-meta {
+        gap: 9px;
+    }
+
+    .revoke-session-btn,
+    .revoke-others-btn {
+        width: 100%;
+    }
+
+    .revoke-session-btn {
+        margin-top: 3px;
+    }
+
+    .revoke-others-container {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 16px;
+    }
+
+    .login-history-item {
+        gap: 12px;
+        padding: 15px 7px;
+    }
+
+    .login-history-list::before {
+        left: 19px;
+    }
+
+    .login-history-icon {
+        width: 39px;
+        height: 39px;
+    }
+
+    .login-history-date {
+        max-width: 100px;
+        align-items: flex-start;
+        font-size: 9px;
+        line-height: 1.5;
+    }
+
+    .notification-global-actions {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 13px;
+    }
+
+    .notification-option {
+        padding: 16px 5px;
+    }
+
+    .notification-option p {
+        max-width: 230px;
+    }
 }
 
 @media (max-width: 520px) {
-
     .settings-content {
         padding: 18px 12px;
     }
@@ -1298,21 +1593,20 @@ html[data-theme="dark"] .appearance-radio-options label:hover {
     }
 
     .settings-form-actions {
-        flex-direction: column-reverse;
         align-items: stretch;
+        flex-direction: column-reverse;
     }
 
     .settings-form-actions button {
         width: 100%;
     }
 
-    .notification-global-actions {
-        align-items: flex-start;
-        flex-direction: column;
+    .appearance-radio-options {
+        grid-template-columns: 1fr;
     }
 
-    .appearance-choice-grid {
-        grid-template-columns: 1fr;
+    .appearance-color-options {
+        gap: 17px;
     }
 
     .two-factor-settings {
@@ -1334,13 +1628,47 @@ html[data-theme="dark"] .appearance-radio-options label:hover {
 
     .two-factor-settings .settings-save-btn {
         width: 100%;
-        min-width: unset;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 430px) {
+    .session-management-section,
+    .login-history-section {
+        padding: 15px;
     }
 
+    .session-summary {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .active-session-title {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .active-session-meta {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .login-history-item {
+        flex-wrap: wrap;
+    }
+
+    .login-history-details {
+        flex-basis: calc(100% - 55px);
+    }
+
+    .login-history-date {
+        max-width: none;
+        margin-left: 51px;
+    }
 }
 
 @media (max-width: 360px) {
-
     .settings-content {
         padding: 15px 9px;
     }
@@ -1353,1368 +1681,8 @@ html[data-theme="dark"] .appearance-radio-options label:hover {
         padding: 13px;
     }
 
-}
-
-/* =========================================================
-   CLOUDSPACE — PREMIUM SECURITY & SESSION MANAGEMENT UI
-   Active Sessions + Login History
-   Light / Dark / System Theme Support
-========================================================= */
-
-/* =========================================================
-   1. SECURITY THEME VARIABLES
-========================================================= */
-
-.settings-content {
-
-    --security-surface: var(--settings-card);
-    --security-surface-secondary: var(--settings-card-secondary);
-
-    --security-text: var(--settings-heading);
-    --security-muted: var(--settings-muted);
-
-    --security-border: var(--settings-border);
-    --security-divider: var(--settings-divider);
-
-    --security-hover: var(--settings-hover);
-
-    --security-accent: var(--accent-color, #4169e1);
-
-    --security-shadow:
-        0 2px 10px rgba(20, 25, 45, 0.035);
-
-    --security-card-shadow:
-        0 5px 18px rgba(20, 25, 45, 0.045);
-
-}
-
-/* =========================================================
-   2. MAIN SECURITY SECTIONS
-========================================================= */
-
-.session-management-section,
-.login-history-section {
-
-    position: relative;
-
-    margin-top: 25px;
-    padding: 26px;
-
-    background: var(--security-surface);
-
-    border: 1px solid var(--security-border);
-    border-radius: 15px;
-
-    box-shadow: var(--security-shadow);
-
-    transition:
-        background 0.25s ease,
-        border-color 0.25s ease,
-        box-shadow 0.25s ease;
-
-    animation: securityFadeIn 0.55s ease both;
-
-}
-
-.session-management-section:hover,
-.login-history-section:hover {
-
-    box-shadow: var(--security-card-shadow);
-
-}
-
-/* =========================================================
-   3. SECTION HEADINGS
-========================================================= */
-
-.session-section-heading {
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 15px;
-
-    margin-bottom: 24px;
-
-}
-
-.session-section-heading h3 {
-
-    font-size: 17px;
-    font-weight: 700;
-
-    letter-spacing: -0.35px;
-
-    color: var(--security-text);
-
-    margin: 0 0 7px;
-
-}
-
-.session-section-heading p {
-
-    font-size: 12px;
-    line-height: 1.6;
-
-    color: var(--security-muted);
-
-    margin: 0;
-
-}
-
-/* =========================================================
-   4. REFRESH BUTTON
-========================================================= */
-
-.session-refresh-btn {
-
-    width: 39px;
-    height: 39px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    border: 1px solid var(--security-border);
-    border-radius: 10px;
-
-    background: var(--security-surface-secondary);
-
-    color: var(--security-muted);
-
-    cursor: pointer;
-
-    transition:
-        color 0.2s ease,
-        background 0.2s ease,
-        border-color 0.2s ease,
-        transform 0.2s ease;
-
-}
-
-.session-refresh-btn:hover {
-
-    color: var(--security-accent);
-
-    border-color: var(--security-accent);
-
-    background: var(--security-hover);
-
-    transform: rotate(12deg);
-
-}
-
-.session-refresh-btn:active {
-
-    transform: scale(0.92);
-
-}
-
-.session-refresh-btn:disabled {
-
-    opacity: 0.6;
-    cursor: not-allowed;
-
-}
-
-.session-spinning {
-
-    animation: sessionRotate 0.9s linear infinite;
-
-}
-
-@keyframes sessionRotate {
-
-    to {
-        transform: rotate(360deg);
-    }
-
-}
-
-/* =========================================================
-   5. ACTIVE SESSION SUMMARY
-========================================================= */
-
-.session-summary {
-
-    display: inline-flex;
-    align-items: center;
-
-    gap: 13px;
-
-    min-width: 185px;
-
-    padding: 13px 17px;
-
-    margin-bottom: 22px;
-
-    background:
-        linear-gradient(
-            135deg,
-            color-mix(in srgb, var(--security-accent) 9%, var(--security-surface)),
-            var(--security-surface-secondary)
-        );
-
-    border: 1px solid
-        color-mix(in srgb, var(--security-accent) 18%, var(--security-border));
-
-    border-radius: 12px;
-
-    transition: transform 0.25s ease;
-
-}
-
-.session-summary:hover {
-
-    transform: translateY(-2px);
-
-}
-
-.session-summary-icon {
-
-    width: 42px;
-    height: 42px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 11px;
-
-    color: var(--security-accent);
-
-    background:
-        color-mix(in srgb, var(--security-accent) 13%, transparent);
-
-}
-
-.session-summary > div:last-child {
-
-    display: flex;
-    flex-direction: column;
-
-    gap: 4px;
-
-}
-
-.session-summary strong {
-
-    font-size: 21px;
-    font-weight: 750;
-
-    line-height: 1;
-
-    color: var(--security-text);
-
-}
-
-.session-summary span {
-
-    font-size: 11px;
-    font-weight: 550;
-
-    color: var(--security-muted);
-
-}
-
-/* =========================================================
-   6. ACTIVE SESSION CARDS
-========================================================= */
-
-.active-session-list {
-
-    display: flex;
-    flex-direction: column;
-
-    gap: 13px;
-
-}
-
-.active-session-card {
-
-    position: relative;
-
-    display: flex;
-    align-items: center;
-
-    gap: 17px;
-
-    padding: 19px;
-
-    background: var(--security-surface-secondary);
-
-    border: 1px solid var(--security-border);
-
-    border-radius: 13px;
-
-    transition:
-        transform 0.25s ease,
-        border-color 0.25s ease,
-        box-shadow 0.25s ease,
-        background 0.25s ease;
-
-    animation: securitySlideIn 0.45s ease both;
-
-}
-
-.active-session-card:nth-child(2) {
-    animation-delay: 0.08s;
-}
-
-.active-session-card:nth-child(3) {
-    animation-delay: 0.16s;
-}
-
-.active-session-card:nth-child(4) {
-    animation-delay: 0.24s;
-}
-
-.active-session-card:hover {
-
-    transform: translateY(-3px);
-
-    border-color:
-        color-mix(in srgb, var(--security-accent) 45%, var(--security-border));
-
-    box-shadow:
-        0 7px 20px rgba(30, 40, 80, 0.07);
-
-}
-
-/* Device Icon */
-
-.active-session-icon {
-
-    width: 53px;
-    height: 53px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    color: var(--security-accent);
-
-    background:
-        color-mix(in srgb, var(--security-accent) 11%, var(--security-surface));
-
-    border: 1px solid
-        color-mix(in srgb, var(--security-accent) 15%, var(--security-border));
-
-    border-radius: 13px;
-
-    transition:
-        transform 0.25s ease,
-        background 0.25s ease;
-
-}
-
-.active-session-card:hover .active-session-icon {
-
-    transform: scale(1.06);
-
-}
-
-/* Session Details */
-
-.active-session-details {
-
-    flex: 1;
-    min-width: 0;
-
-}
-
-.active-session-title {
-
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-
-    gap: 10px;
-
-    margin-bottom: 7px;
-
-}
-
-.active-session-title h4 {
-
-    font-size: 14px;
-    font-weight: 700;
-
-    color: var(--security-text);
-
-    margin: 0;
-
-}
-
-.active-session-details > p {
-
-    font-size: 12px;
-
-    color: var(--security-muted);
-
-    margin: 0 0 12px;
-
-}
-
-/* Current Device Badge */
-
-.current-device-badge {
-
-    display: inline-flex;
-    align-items: center;
-
-    gap: 5px;
-
-    padding: 5px 9px;
-
-    border-radius: 20px;
-
-    background: rgba(34, 197, 94, 0.10);
-
-    border: 1px solid rgba(34, 197, 94, 0.20);
-
-    color: #16a34a;
-
-    font-size: 10px;
-    font-weight: 700;
-
-    white-space: nowrap;
-
-}
-
-.current-device-badge svg {
-
-    animation: securityPulse 2s ease-in-out infinite;
-
-}
-
-@keyframes securityPulse {
-
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-
-    50% {
-        opacity: 0.65;
-        transform: scale(0.88);
-    }
-
-}
-
-/* Session Metadata */
-
-.active-session-meta {
-
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-
-    gap: 13px;
-
-}
-
-.active-session-meta span {
-
-    display: inline-flex;
-    align-items: center;
-
-    gap: 6px;
-
-    font-size: 11px;
-
-    color: var(--security-muted);
-
-}
-
-.active-session-meta svg {
-
-    color: var(--security-muted);
-
-    flex-shrink: 0;
-
-}
-
-/* =========================================================
-   7. REVOKE SESSION BUTTON
-========================================================= */
-
-.revoke-session-btn {
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    gap: 7px;
-
-    min-width: 92px;
-
-    padding: 9px 13px;
-
-    flex-shrink: 0;
-
-    background: rgba(239, 68, 68, 0.07);
-
-    border: 1px solid rgba(239, 68, 68, 0.18);
-
-    border-radius: 8px;
-
-    color: #dc4545;
-
-    font-size: 11px;
-    font-weight: 650;
-
-    cursor: pointer;
-
-    transition:
-        background 0.2s ease,
-        border-color 0.2s ease,
-        transform 0.2s ease;
-
-}
-
-.revoke-session-btn:hover {
-
-    background: rgba(239, 68, 68, 0.14);
-
-    border-color: rgba(239, 68, 68, 0.38);
-
-    transform: translateY(-2px);
-
-}
-
-.revoke-session-btn:active {
-
-    transform: scale(0.96);
-
-}
-
-.revoke-session-btn:disabled {
-
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-
-}
-
-/* =========================================================
-   8. REVOKE ALL OTHER SESSIONS
-========================================================= */
-
-.revoke-others-container {
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 18px;
-
-    margin-top: 22px;
-    padding: 19px;
-
-    background:
-        color-mix(in srgb, #ef4444 5%, var(--security-surface));
-
-    border: 1px solid rgba(239, 68, 68, 0.17);
-
-    border-radius: 12px;
-
-}
-
-.revoke-others-container h4 {
-
-    font-size: 13px;
-    font-weight: 700;
-
-    color: var(--security-text);
-
-    margin: 0 0 6px;
-
-}
-
-.revoke-others-container p {
-
-    font-size: 11px;
-    line-height: 1.6;
-
-    color: var(--security-muted);
-
-    margin: 0;
-
-}
-
-.revoke-others-btn {
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    gap: 8px;
-
-    padding: 11px 15px;
-
-    flex-shrink: 0;
-
-    background: #dc4545;
-
-    border: 1px solid #dc4545;
-
-    border-radius: 8px;
-
-    color: #ffffff;
-
-    font-size: 11px;
-    font-weight: 650;
-
-    cursor: pointer;
-
-    transition:
-        background 0.2s ease,
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-
-}
-
-.revoke-others-btn:hover {
-
-    background: #c93434;
-
-    box-shadow: 0 5px 14px rgba(220, 69, 69, 0.20);
-
-    transform: translateY(-2px);
-
-}
-
-.revoke-others-btn:active {
-
-    transform: scale(0.97);
-
-}
-
-.revoke-others-btn:disabled {
-
-    opacity: 0.55;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-
-}
-
-/* =========================================================
-   9. LOGIN HISTORY SECTION
-========================================================= */
-
-.login-history-section {
-
-    margin-top: 25px;
-
-}
-
-.login-history-section .session-section-heading {
-
-    margin-bottom: 28px;
-
-}
-
-/* =========================================================
-   10. LOGIN HISTORY TIMELINE
-========================================================= */
-
-.login-history-list {
-
-    position: relative;
-
-    display: flex;
-    flex-direction: column;
-
-}
-
-/* Vertical Timeline */
-
-.login-history-list::before {
-
-    content: "";
-
-    position: absolute;
-
-    left: 21px;
-    top: 24px;
-    bottom: 24px;
-
-    width: 2px;
-
-    background:
-        linear-gradient(
-            to bottom,
-            var(--security-accent),
-            var(--security-divider),
-            transparent
-        );
-
-    opacity: 0.3;
-
-}
-
-.login-history-item {
-
-    position: relative;
-
-    display: flex;
-    align-items: flex-start;
-
-    gap: 16px;
-
-    padding: 17px 15px;
-
-    border-bottom: 1px solid var(--security-divider);
-
-    border-radius: 10px;
-
-    transition:
-        background 0.2s ease,
-        transform 0.2s ease;
-
-    animation: securitySlideIn 0.45s ease both;
-
-}
-
-.login-history-item:nth-child(2) {
-    animation-delay: 0.06s;
-}
-
-.login-history-item:nth-child(3) {
-    animation-delay: 0.12s;
-}
-
-.login-history-item:nth-child(4) {
-    animation-delay: 0.18s;
-}
-
-.login-history-item:nth-child(5) {
-    animation-delay: 0.24s;
-}
-
-.login-history-item:last-child {
-
-    border-bottom: none;
-
-}
-
-.login-history-item:hover {
-
-    background: var(--security-hover);
-
-    transform: translateX(3px);
-
-}
-
-/* Event Icon */
-
-.login-history-icon {
-
-    position: relative;
-    z-index: 1;
-
-    width: 43px;
-    height: 43px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    border-radius: 12px;
-
-    background: var(--security-surface);
-
-    border: 1px solid var(--security-border);
-
-    transition: transform 0.2s ease;
-
-}
-
-.login-history-item:hover .login-history-icon {
-
-    transform: scale(1.08);
-
-}
-
-/* Successful Login */
-
-.login-history-icon.login {
-
-    color: #16a36a;
-
-    background: rgba(22, 163, 106, 0.09);
-
-    border-color: rgba(22, 163, 106, 0.17);
-
-}
-
-/* Failed Login */
-
-.login-history-icon.login_failed {
-
-    color: #dc4545;
-
-    background: rgba(220, 69, 69, 0.09);
-
-    border-color: rgba(220, 69, 69, 0.17);
-
-}
-
-/* Suspicious Login Activity */
-
-.login-history-icon.suspicious_login_alert {
-
-    color: #9333ea;
-
-    background: rgba(147, 51, 234, 0.10);
-
-    border-color: rgba(147, 51, 234, 0.22);
-
-}
-
-/* Session Revoked */
-
-.login-history-icon.session_revoked {
-
-    color: #d97706;
-
-    background: rgba(217, 119, 6, 0.09);
-
-    border-color: rgba(217, 119, 6, 0.17);
-
-}
-
-/* Logout */
-
-.login-history-icon.logout {
-
-    color: #64748b;
-
-    background: rgba(100, 116, 139, 0.09);
-
-    border-color: rgba(100, 116, 139, 0.17);
-
-}
-
-/* =========================================================
-   11. LOGIN HISTORY DETAILS
-========================================================= */
-
-.login-history-details {
-
-    flex: 1;
-    min-width: 0;
-
-    padding-top: 2px;
-
-}
-
-.login-history-details h4 {
-
-    font-size: 13px;
-    font-weight: 700;
-
-    color: var(--security-text);
-
-    margin: 0 0 6px;
-
-}
-
-.login-history-details > p {
-
-    font-size: 11px;
-    line-height: 1.6;
-
-    color: var(--security-muted);
-
-    margin: 0 0 9px;
-
-    overflow-wrap: anywhere;
-
-}
-
-.login-history-meta {
-
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-
-    gap: 8px;
-
-}
-
-.login-history-meta span {
-
-    display: inline-flex;
-    align-items: center;
-
-    padding: 5px 8px;
-
-    background: var(--security-surface);
-
-    border: 1px solid var(--security-border);
-
-    border-radius: 6px;
-
-    font-size: 10px;
-    font-weight: 550;
-
-    color: var(--security-muted);
-
-}
-
-/* =========================================================
-   12. LOGIN HISTORY DATE
-========================================================= */
-
-.login-history-date {
-
-    display: flex;
-    align-items: center;
-
-    gap: 6px;
-
-    flex-shrink: 0;
-
-    padding-top: 4px;
-
-    font-size: 10px;
-
-    color: var(--security-muted);
-
-}
-
-.login-history-date svg {
-
-    flex-shrink: 0;
-
-}
-
-/* =========================================================
-   13. EMPTY AND LOADING STATES
-========================================================= */
-
-.session-loading {
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    min-height: 100px;
-
-    color: var(--security-muted);
-
-    font-size: 12px;
-
-}
-
-.session-empty {
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    gap: 13px;
-
-    min-height: 155px;
-
-    padding: 25px;
-
-    background: var(--security-surface-secondary);
-
-    border: 1px dashed var(--security-border);
-
-    border-radius: 12px;
-
-    color: var(--security-muted);
-
-}
-
-.session-empty svg {
-
-    opacity: 0.7;
-
-}
-
-.session-empty p {
-
-    font-size: 12px;
-
-    margin: 0;
-
-}
-
-/* =========================================================
-   14. ANIMATIONS
-========================================================= */
-
-@keyframes securityFadeIn {
-
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-}
-
-@keyframes securitySlideIn {
-
-    from {
-        opacity: 0;
-        transform: translateY(9px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-}
-
-/* =========================================================
-   15. DARK THEME
-========================================================= */
-
-html[data-theme="dark"] .session-management-section,
-html[data-theme="dark"] .login-history-section {
-
-    background: var(--security-surface);
-
-    border-color: var(--security-border);
-
-}
-
-html[data-theme="dark"] .active-session-card {
-
-    background: #22232c;
-
-    border-color: #383945;
-
-}
-
-html[data-theme="dark"] .active-session-card:hover {
-
-    background: #282a35;
-
-}
-
-html[data-theme="dark"] .session-summary {
-
-    background:
-        color-mix(in srgb, var(--security-accent) 12%, #22232c);
-
-}
-
-html[data-theme="dark"] .login-history-icon {
-
-    background: #252630;
-
-}
-
-html[data-theme="dark"] .login-history-meta span {
-
-    background: #252630;
-
-}
-
-html[data-theme="dark"] .current-device-badge {
-
-    color: #55d99b;
-
-    background: rgba(34, 197, 94, 0.13);
-
-    border-color: rgba(34, 197, 94, 0.24);
-
-}
-
-/* =========================================================
-   16. SYSTEM DARK MODE
-========================================================= */
-
-@media (prefers-color-scheme: dark) {
-
-    html[data-theme="system"] .active-session-card {
-
-        background: #22232c;
-
-        border-color: #383945;
-
-    }
-
-    html[data-theme="system"] .active-session-card:hover {
-
-        background: #282a35;
-
-    }
-
-    html[data-theme="system"] .login-history-icon {
-
-        background: #252630;
-
-    }
-
-    html[data-theme="system"] .login-history-meta span {
-
-        background: #252630;
-
-    }
-
-    html[data-theme="system"] .current-device-badge {
-
-        color: #55d99b;
-
-        background: rgba(34, 197, 94, 0.13);
-
-        border-color: rgba(34, 197, 94, 0.24);
-
-    }
-
-}
-
-/* =========================================================
-   17. RESPONSIVE TABLET
-========================================================= */
-
-@media (max-width: 900px) {
-
     .session-management-section,
     .login-history-section {
-
-        padding: 22px;
-
+        padding: 13px;
     }
-
-    .active-session-card {
-
-        gap: 13px;
-
-    }
-
-    .login-history-date {
-
-        max-width: 155px;
-
-        line-height: 1.5;
-
-    }
-
-}
-
-/* =========================================================
-   18. RESPONSIVE MOBILE
-========================================================= */
-
-@media (max-width: 650px) {
-
-    .session-management-section,
-    .login-history-section {
-
-        padding: 18px;
-
-        border-radius: 12px;
-
-    }
-
-    .session-section-heading h3 {
-
-        font-size: 15px;
-
-    }
-
-    .active-session-card {
-
-        flex-wrap: wrap;
-
-        padding: 15px;
-
-    }
-
-    .active-session-icon {
-
-        width: 45px;
-        height: 45px;
-
-    }
-
-    .active-session-details {
-
-        flex-basis: calc(100% - 65px);
-
-    }
-
-    .active-session-meta {
-
-        gap: 9px;
-
-    }
-
-    .revoke-session-btn {
-
-        width: 100%;
-
-        margin-top: 3px;
-
-    }
-
-    .revoke-others-container {
-
-        align-items: stretch;
-
-        flex-direction: column;
-
-        padding: 16px;
-
-    }
-
-    .revoke-others-btn {
-
-        width: 100%;
-
-    }
-
-    .login-history-item {
-
-        gap: 12px;
-
-        padding: 15px 7px;
-
-    }
-
-    .login-history-list::before {
-
-        left: 19px;
-
-    }
-
-    .login-history-icon {
-
-        width: 39px;
-        height: 39px;
-
-    }
-
-    .login-history-date {
-
-        max-width: 100px;
-
-        font-size: 9px;
-
-        line-height: 1.5;
-
-        align-items: flex-start;
-
-    }
-
-}
-
-/* =========================================================
-   19. SMALL MOBILE
-========================================================= */
-
-@media (max-width: 430px) {
-
-    .session-management-section,
-    .login-history-section {
-
-        padding: 15px;
-
-    }
-
-    .session-summary {
-
-        width: 100%;
-
-        box-sizing: border-box;
-
-    }
-
-    .active-session-title {
-
-        align-items: flex-start;
-
-        flex-direction: column;
-
-        gap: 7px;
-
-    }
-
-    .active-session-meta {
-
-        flex-direction: column;
-
-        align-items: flex-start;
-
-    }
-
-    .login-history-item {
-
-        flex-wrap: wrap;
-
-    }
-
-    .login-history-details {
-
-        flex-basis: calc(100% - 55px);
-
-    }
-
-    .login-history-date {
-
-        margin-left: 51px;
-
-        max-width: none;
-
-    }
-
-}
-
-/* =========================================================
-   20. ACCESSIBILITY
-========================================================= */
-
-.session-refresh-btn:focus-visible,
-.revoke-session-btn:focus-visible,
-.revoke-others-btn:focus-visible {
-
-    outline: 3px solid
-        color-mix(in srgb, var(--security-accent) 35%, transparent);
-
-    outline-offset: 3px;
-
-}
-
-@media (prefers-reduced-motion: reduce) {
-
-    .session-management-section,
-    .login-history-section,
-    .active-session-card,
-    .login-history-item,
-    .current-device-badge svg {
-
-        animation: none !important;
-
-    }
-
-    .session-management-section *,
-    .login-history-section * {
-
-        transition-duration: 0.01ms !important;
-
-    }
-
 }

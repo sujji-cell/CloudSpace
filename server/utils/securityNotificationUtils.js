@@ -1,93 +1,150 @@
+
 import Notification from "../models/Notification.js";
 import sendEmail from "./sendEmail.js";
 
+
 // ============================================
-// HELPER: ESCAPE HTML CONTENT
+// HELPER FUNCTIONS
 // ============================================
 
+// Escape HTML content to prevent HTML injection
 const escapeHtml = (value = "") => {
-    return String(value).replace(/[&<>"']/g, (char) => ({
+
+    return String(value ?? "").replace(/[&<>"']/g, (char) => ({
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
         '"': "&quot;",
         "'": "&#39;"
     })[char]);
+
 };
 
+
+// Get formatted Indian date and time
+const getIndianTime = () => {
+
+    return new Date().toLocaleString(
+        "en-IN",
+        {
+            dateStyle: "medium",
+            timeStyle: "medium",
+            timeZone: "Asia/Kolkata"
+        }
+    );
+
+};
+
+
+// Get user's first name
+const getFirstName = (user) => {
+
+    return user?.firstName || "User";
+
+};
+
+
+// Check notification preferences
+const isInAppEnabled = (user) => {
+
+    return user?.notificationPreferences?.inApp?.accountActivity !== false;
+
+};
+
+
+const isEmailEnabled = (user) => {
+
+    return user?.notificationPreferences?.email?.securityAlerts !== false;
+
+};
+
+
 // ============================================
-// CREATE NEW DEVICE SECURITY ALERTS
+// 1. CREATE NEW DEVICE SECURITY ALERT
 // ============================================
 
 export const createSecurityNotification = async (user, session) => {
+
     try {
-        // Only process new device profiles
-        if (!session.$locals.isNewDevice) {
+
+        // Validate required information
+        if (!user?._id || !session) {
             return null;
         }
 
-        const preferences = user.notificationPreferences;
+        // Only process new device profiles
+        if (!session.$locals?.isNewDevice) {
+            return null;
+        }
+
+        const device = session.device || "Unknown device";
+        const browser = session.browser || "Unknown browser";
+        const operatingSystem = session.operatingSystem || "Unknown OS";
+        const ipAddress = session.ipAddress || "Unavailable";
 
         // ======================================
         // 1. IN-APP SECURITY NOTIFICATION
         // ======================================
 
-        const inAppEnabled =
-            preferences?.inApp?.accountActivity !== false;
+        if (isInAppEnabled(user)) {
 
-        if (inAppEnabled) {
             try {
+
                 await Notification.create({
+
                     recipient: user._id,
+
                     sender: null,
+
                     type: "security_alert",
+
                     title: "New Device Login Detected",
 
-                    message: `A new login to your CloudSpace account was detected from ${session.device} using ${session.browser} on ${session.operatingSystem}. IP Address: ${session.ipAddress}.`,
+                    message: `A new login to your CloudSpace account was detected from ${device} using ${browser} on ${operatingSystem}. IP Address: ${ipAddress}.`,
 
                     link: "/settings"
+
                 });
 
-                console.log("In-app security notification created.");
+                console.log(
+                    "In-app security notification created."
+                );
 
             } catch (error) {
+
                 console.error(
                     "In-app security notification error:",
                     error
                 );
+
             }
+
         }
+
 
         // ======================================
         // 2. EMAIL SECURITY ALERT
         // ======================================
 
-        const emailEnabled =
-            preferences?.email?.securityAlerts !== false;
+        if (isEmailEnabled(user) && user.email) {
 
-        if (emailEnabled) {
             try {
-                const loginTime = new Date().toLocaleString(
-                    "en-IN",
-                    {
-                        dateStyle: "medium",
-                        timeStyle: "medium",
-                        timeZone: "Asia/Kolkata"
-                    }
-                );
 
                 const firstName = escapeHtml(
-                    user.firstName || "User"
+                    getFirstName(user)
                 );
 
-                const device = escapeHtml(session.device);
-                const browser = escapeHtml(session.browser);
-                const operatingSystem = escapeHtml(
-                    session.operatingSystem
+                const safeDevice = escapeHtml(device);
+                const safeBrowser = escapeHtml(browser);
+                const safeOS = escapeHtml(operatingSystem);
+                const safeIP = escapeHtml(ipAddress);
+
+                const loginTime = escapeHtml(
+                    getIndianTime()
                 );
-                const ipAddress = escapeHtml(session.ipAddress);
 
                 const html = `
+
                     <div style="
                         font-family: Arial, sans-serif;
                         max-width: 600px;
@@ -120,12 +177,14 @@ export const createSecurityNotification = async (user, session) => {
                                 width: 100%;
                                 border-collapse: collapse;
                             ">
+
                                 <tr>
                                     <td style="padding: 10px;">
                                         <strong>Device</strong>
                                     </td>
+
                                     <td style="padding: 10px;">
-                                        ${device}
+                                        ${safeDevice}
                                     </td>
                                 </tr>
 
@@ -133,8 +192,9 @@ export const createSecurityNotification = async (user, session) => {
                                     <td style="padding: 10px;">
                                         <strong>Browser</strong>
                                     </td>
+
                                     <td style="padding: 10px;">
-                                        ${browser}
+                                        ${safeBrowser}
                                     </td>
                                 </tr>
 
@@ -142,8 +202,9 @@ export const createSecurityNotification = async (user, session) => {
                                     <td style="padding: 10px;">
                                         <strong>Operating System</strong>
                                     </td>
+
                                     <td style="padding: 10px;">
-                                        ${operatingSystem}
+                                        ${safeOS}
                                     </td>
                                 </tr>
 
@@ -151,8 +212,9 @@ export const createSecurityNotification = async (user, session) => {
                                     <td style="padding: 10px;">
                                         <strong>IP Address</strong>
                                     </td>
+
                                     <td style="padding: 10px;">
-                                        ${ipAddress}
+                                        ${safeIP}
                                     </td>
                                 </tr>
 
@@ -160,10 +222,12 @@ export const createSecurityNotification = async (user, session) => {
                                     <td style="padding: 10px;">
                                         <strong>Login Time</strong>
                                     </td>
+
                                     <td style="padding: 10px;">
                                         ${loginTime}
                                     </td>
                                 </tr>
+
                             </table>
 
                             <div style="
@@ -173,6 +237,7 @@ export const createSecurityNotification = async (user, session) => {
                                 border-left: 4px solid #f97316;
                                 border-radius: 5px;
                             ">
+
                                 <strong>Wasn't this you?</strong>
 
                                 <p>
@@ -181,6 +246,7 @@ export const createSecurityNotification = async (user, session) => {
                                     Change your password and review
                                     your active sessions.
                                 </p>
+
                             </div>
 
                             <p style="margin-top: 25px;">
@@ -199,6 +265,7 @@ export const createSecurityNotification = async (user, session) => {
                         </p>
 
                     </div>
+
                 `;
 
                 await sendEmail(
@@ -207,19 +274,25 @@ export const createSecurityNotification = async (user, session) => {
                     html
                 );
 
-                console.log("Security alert email sent.");
+                console.log(
+                    "Security alert email sent."
+                );
 
             } catch (error) {
+
                 console.error(
                     "Security alert email error:",
                     error
                 );
+
             }
+
         }
 
         return true;
 
     } catch (error) {
+
         console.error(
             "Security notification error:",
             error
@@ -227,11 +300,14 @@ export const createSecurityNotification = async (user, session) => {
 
         // Never interrupt a successful login
         return null;
+
     }
+
 };
 
+
 // ============================================
-// CREATE SUSPICIOUS LOGIN SECURITY ALERT
+// 2. CREATE SUSPICIOUS LOGIN SECURITY ALERT
 // ============================================
 
 export const createSuspiciousLoginNotification = async (
@@ -239,27 +315,42 @@ export const createSuspiciousLoginNotification = async (
     ipAddress,
     failedCount
 ) => {
+
     try {
-        const preferences = user.notificationPreferences;
+
+        // Validate required information
+        if (!user?._id) {
+            return null;
+        }
+
+        const safeIP = ipAddress || "Unavailable";
+
+        const attemptCount = Number.isFinite(Number(failedCount))
+            ? Math.max(0, Math.floor(Number(failedCount)))
+            : 0;
 
         // ======================================
         // 1. IN-APP SECURITY NOTIFICATION
         // ======================================
 
-        const inAppEnabled =
-            preferences?.inApp?.accountActivity !== false;
+        if (isInAppEnabled(user)) {
 
-        if (inAppEnabled) {
             try {
+
                 await Notification.create({
+
                     recipient: user._id,
+
                     sender: null,
+
                     type: "security_alert",
+
                     title: "Suspicious Login Activity Detected",
 
-                    message: `We detected ${failedCount} unsuccessful login attempts on your CloudSpace account within 15 minutes. IP Address: ${ipAddress}.`,
+                    message: `We detected ${attemptCount} unsuccessful login attempts on your CloudSpace account within 15 minutes. IP Address: ${safeIP}.`,
 
                     link: "/settings"
+
                 });
 
                 console.log(
@@ -267,39 +358,41 @@ export const createSuspiciousLoginNotification = async (
                 );
 
             } catch (error) {
+
                 console.error(
                     "Suspicious login notification error:",
                     error
                 );
+
             }
+
         }
+
 
         // ======================================
         // 2. EMAIL SECURITY ALERT
         // ======================================
 
-        const emailEnabled =
-            preferences?.email?.securityAlerts !== false;
+        if (isEmailEnabled(user) && user.email) {
 
-        if (emailEnabled) {
             try {
+
                 const firstName = escapeHtml(
-                    user.firstName || "User"
+                    getFirstName(user)
                 );
 
-                const safeIpAddress = escapeHtml(ipAddress);
-                const safeFailedCount = escapeHtml(failedCount);
+                const safeIpAddress = escapeHtml(safeIP);
 
-                const alertTime = new Date().toLocaleString(
-                    "en-IN",
-                    {
-                        dateStyle: "medium",
-                        timeStyle: "medium",
-                        timeZone: "Asia/Kolkata"
-                    }
+                const safeFailedCount = escapeHtml(
+                    attemptCount
+                );
+
+                const alertTime = escapeHtml(
+                    getIndianTime()
                 );
 
                 const html = `
+
                     <div style="
                         font-family: Arial, sans-serif;
                         max-width: 600px;
@@ -334,6 +427,7 @@ export const createSuspiciousLoginNotification = async (
                                 border-radius: 5px;
                                 margin: 20px 0;
                             ">
+
                                 <strong>
                                     Suspicious Login Activity
                                 </strong>
@@ -343,6 +437,7 @@ export const createSuspiciousLoginNotification = async (
                                     login attempts were detected
                                     within 15 minutes.
                                 </p>
+
                             </div>
 
                             <h3>Activity Details</h3>
@@ -351,6 +446,7 @@ export const createSuspiciousLoginNotification = async (
                                 width: 100%;
                                 border-collapse: collapse;
                             ">
+
                                 <tr>
                                     <td style="padding: 10px;">
                                         <strong>IP Address</strong>
@@ -380,6 +476,7 @@ export const createSuspiciousLoginNotification = async (
                                         ${alertTime}
                                     </td>
                                 </tr>
+
                             </table>
 
                             <div style="
@@ -389,6 +486,7 @@ export const createSuspiciousLoginNotification = async (
                                 border-left: 4px solid #f97316;
                                 border-radius: 5px;
                             ">
+
                                 <strong>Wasn't this you?</strong>
 
                                 <p>
@@ -396,6 +494,7 @@ export const createSuspiciousLoginNotification = async (
                                     password immediately and
                                     reviewing your active sessions.
                                 </p>
+
                             </div>
 
                             <p style="margin-top: 25px;">
@@ -414,6 +513,7 @@ export const createSuspiciousLoginNotification = async (
                         </p>
 
                     </div>
+
                 `;
 
                 await sendEmail(
@@ -427,21 +527,27 @@ export const createSuspiciousLoginNotification = async (
                 );
 
             } catch (error) {
+
                 console.error(
                     "Suspicious login email error:",
                     error
                 );
+
             }
+
         }
 
         return true;
 
     } catch (error) {
+
         console.error(
             "Suspicious login notification error:",
             error
         );
 
         return null;
+
     }
+
 };

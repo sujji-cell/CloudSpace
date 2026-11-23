@@ -68,9 +68,15 @@ const fileSchema = new mongoose.Schema(
         },
 
         isDeleted: {
-            type: Boolean,
-            default: false
-        },
+    type: Boolean,
+    default: false
+},
+
+// Prevents simultaneous permanent deletion requests
+isDeleting: {
+    type: Boolean,
+    default: false
+},
 
         deletedAt: {
             type: Date,

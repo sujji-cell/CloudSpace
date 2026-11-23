@@ -1,9 +1,12 @@
 import cloudinary from "../config/cloudinary.js";
 import { Readable } from "stream";
+import mongoose from "mongoose";
 
 import File from "../models/File.js";
 import FileVersion from "../models/FileVersion.js";
 import User from "../models/User.js";
+import Share from "../models/Share.js";
+
 
 // ============================================
 // 1. UPLOAD A NEW VERSION
@@ -11,43 +14,79 @@ import User from "../models/User.js";
 
 export const uploadNewVersion = async (req, res) => {
     let cloudinaryResult = null;
+    let session = null;
 
     try {
         const { fileId } = req.params;
         const uploadedFile = req.file;
         const userId = req.userId;
 
+        // Validate file ID
+        if (!mongoose.Types.ObjectId.isValid(fileId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid file ID."
+            });
+        }
+
+        // Check uploaded file
         if (!uploadedFile) {
             return res.status(400).json({
+                success: false,
                 message: "Please select a file."
             });
         }
 
-        // Find the original file
-        const file = await File.findOne({
-            _id: fileId,
-            owner: userId,
-            isDeleted: false
+        // Find original file
+const file = await File.findOne({
+    _id: fileId,
+    isDeleted: false
+});
+
+if (!file) {
+    return res.status(404).json({
+        success: false,
+        message: "File not found."
+    });
+}
+
+// Check whether logged-in user is the owner
+const isOwner = file.owner.toString() === userId.toString();
+const ownerId = file.owner;
+if (!isOwner) {
+
+    // Check whether user has editor permission
+    const activeShare = await Share.findOne({
+        file: file._id,
+        recipient: userId,
+        isActive: true,
+        permission: "editor"
+    });
+
+    if (!activeShare) {
+        return res.status(403).json({
+            success: false,
+            message: "You do not have permission to upload a new version."
         });
-
-        if (!file) {
-            return res.status(404).json({
-                message: "File not found."
-            });
-        }
-
-        // Get user storage information
-        const user = await User.findById(userId);
+    }
+}
+        // Find user
+        const user = await User.findById(ownerId);
 
         if (!user) {
             return res.status(404).json({
+                success: false,
                 message: "User not found."
             });
         }
 
         // Check available storage
-        if (user.storageUsed + uploadedFile.size > user.storageLimit) {
+        if (
+            user.storageUsed + uploadedFile.size >
+            user.storageLimit
+        ) {
             return res.status(400).json({
+                success: false,
                 message: "Storage limit exceeded."
             });
         }
@@ -56,7 +95,7 @@ export const uploadNewVersion = async (req, res) => {
         cloudinaryResult = await new Promise((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
-                    folder: `cloudspace/${userId}`,
+                    folder: `cloudspace/${ownerId}`,
                     resource_type: "auto",
                     type: "authenticated",
                     use_filename: true,
@@ -74,47 +113,84 @@ export const uploadNewVersion = async (req, res) => {
             Readable.from(uploadedFile.buffer).pipe(uploadStream);
         });
 
-        // Save previous version in history
-        const previousVersion = new FileVersion({
-            file: file._id,
-            versionNumber: file.currentVersion,
+        // Start MongoDB transaction
+        session = await mongoose.startSession();
 
-            originalName: file.originalName,
+        await session.withTransaction(async () => {
 
-            fileUrl: file.fileUrl,
-            cloudinaryId: file.cloudinaryId,
+            // Save previous version in history
+            const previousVersion = new FileVersion({
+                file: file._id,
+                versionNumber: file.currentVersion,
 
-            resourceType: file.resourceType,
-            deliveryType: file.deliveryType,
+                originalName: file.originalName,
 
-            size: file.size,
-            mimeType: file.mimeType,
-            format: file.format,
+                fileUrl: file.fileUrl,
+                cloudinaryId: file.cloudinaryId,
 
-            uploadedBy: userId,
-            isCurrent: false
+                resourceType: file.resourceType,
+                deliveryType: file.deliveryType,
+
+                size: file.size,
+                mimeType: file.mimeType,
+                format: file.format,
+
+                uploadedBy: userId,
+                isCurrent: false
+            });
+
+            await previousVersion.save({ session });
+
+            // Update original file with new version details
+            file.originalName = uploadedFile.originalname;
+
+            file.fileUrl = cloudinaryResult.secure_url;
+            file.cloudinaryId = cloudinaryResult.public_id;
+
+            file.resourceType = cloudinaryResult.resource_type;
+            file.deliveryType = cloudinaryResult.type || "authenticated";
+
+            file.size = uploadedFile.size;
+            file.mimeType = uploadedFile.mimetype;
+            file.format = cloudinaryResult.format || "";
+
+            file.currentVersion += 1;
+
+            await file.save({ session });
+
+            // Atomically update storage usage
+            const updatedUser = await User.findOneAndUpdate(
+                {
+                   _id: ownerId,
+                    $expr: {
+                        $lte: [
+                            {
+                                $add: [
+                                    "$storageUsed",
+                                    uploadedFile.size
+                                ]
+                            },
+                            "$storageLimit"
+                        ]
+                    }
+                },
+                {
+                    $inc: {
+                        storageUsed: uploadedFile.size
+                    }
+                },
+                {
+                    returnDocument: "after",
+                    session
+                }
+            );
+
+            if (!updatedUser) {
+                const error = new Error("Storage limit exceeded.");
+                error.statusCode = 400;
+                throw error;
+            }
         });
-
-        await previousVersion.save();
-
-        // Update original file with new version details
-        file.originalName = uploadedFile.originalname;
-        file.fileUrl = cloudinaryResult.secure_url;
-        file.cloudinaryId = cloudinaryResult.public_id;
-        file.resourceType = cloudinaryResult.resource_type;
-        file.deliveryType = cloudinaryResult.type || "authenticated";
-
-        file.size = uploadedFile.size;
-        file.mimeType = uploadedFile.mimetype;
-        file.format = cloudinaryResult.format || "";
-
-        file.currentVersion += 1;
-
-        await file.save();
-
-        // Update storage usage
-        user.storageUsed += uploadedFile.size;
-        await user.save();
 
         return res.status(200).json({
             success: true,
@@ -124,7 +200,7 @@ export const uploadNewVersion = async (req, res) => {
 
     } catch (error) {
 
-        // Clean up Cloudinary asset if something failed
+        // Clean up Cloudinary asset if database operation failed
         if (cloudinaryResult?.public_id) {
             try {
                 await cloudinary.uploader.destroy(
@@ -135,15 +211,26 @@ export const uploadNewVersion = async (req, res) => {
                     }
                 );
             } catch (cleanupError) {
-                console.error("Cloudinary cleanup error:", cleanupError);
+                console.error(
+                    "Cloudinary cleanup error:",
+                    cleanupError
+                );
             }
         }
 
         console.error("Upload new version error:", error);
 
-        return res.status(500).json({
-            message: "Failed to upload new version."
+        return res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.statusCode
+                ? error.message
+                : "Failed to upload new version."
         });
+
+    } finally {
+        if (session) {
+            await session.endSession();
+        }
     }
 };
 
@@ -157,17 +244,43 @@ export const getVersionHistory = async (req, res) => {
         const { fileId } = req.params;
         const userId = req.userId;
 
-        // Find the original file
-        const file = await File.findOne({
-            _id: fileId,
-            owner: userId
-        });
-
-        if (!file) {
-            return res.status(404).json({
-                message: "File not found."
+        // Validate file ID
+        if (!mongoose.Types.ObjectId.isValid(fileId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid file ID."
             });
         }
+
+        // Find original file
+        const file = await File.findOne({
+    _id: fileId,
+    isDeleted: false
+});
+
+if (!file) {
+    return res.status(404).json({
+        success: false,
+        message: "File not found."
+    });
+}
+
+const isOwner = file.owner.toString() === userId.toString();
+
+if (!isOwner) {
+    const activeShare = await Share.findOne({
+        file: file._id,
+        recipient: userId,
+        isActive: true
+    });
+
+    if (!activeShare) {
+        return res.status(403).json({
+            success: false,
+            message: "You do not have permission to view this file's version history."
+        });
+    }
+}
 
         // Get previous versions
         const previousVersions = await FileVersion.find({
@@ -223,6 +336,7 @@ export const getVersionHistory = async (req, res) => {
         console.error("Get version history error:", error);
 
         return res.status(500).json({
+            success: false,
             message: "Failed to retrieve version history."
         });
     }
@@ -234,9 +348,19 @@ export const getVersionHistory = async (req, res) => {
 // ============================================
 
 export const restoreVersion = async (req, res) => {
+    let session = null;
+
     try {
         const { fileId, versionNumber } = req.params;
         const userId = req.userId;
+
+        // Validate file ID
+        if (!mongoose.Types.ObjectId.isValid(fileId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid file ID."
+            });
+        }
 
         // Find original file
         const file = await File.findOne({
@@ -247,10 +371,12 @@ export const restoreVersion = async (req, res) => {
 
         if (!file) {
             return res.status(404).json({
+                success: false,
                 message: "File not found."
             });
         }
 
+        // Convert version number
         const requestedVersion = Number(versionNumber);
 
         // Validate version number
@@ -259,6 +385,7 @@ export const restoreVersion = async (req, res) => {
             requestedVersion < 1
         ) {
             return res.status(400).json({
+                success: false,
                 message: "Invalid version number."
             });
         }
@@ -266,6 +393,7 @@ export const restoreVersion = async (req, res) => {
         // Check whether requested version is already current
         if (requestedVersion === file.currentVersion) {
             return res.status(400).json({
+                success: false,
                 message: "This version is already current."
             });
         }
@@ -278,55 +406,58 @@ export const restoreVersion = async (req, res) => {
 
         if (!oldVersion) {
             return res.status(404).json({
+                success: false,
                 message: "Requested version not found."
             });
         }
 
-        // Save current version in history
-        const currentVersionHistory = new FileVersion({
-            file: file._id,
+        // Start MongoDB transaction
+        session = await mongoose.startSession();
 
-            versionNumber: file.currentVersion,
+        await session.withTransaction(async () => {
 
-            originalName: file.originalName,
+            // Save current version in history
+            const currentVersionHistory = new FileVersion({
+                file: file._id,
 
-            fileUrl: file.fileUrl,
-            cloudinaryId: file.cloudinaryId,
+                versionNumber: file.currentVersion,
 
-            resourceType: file.resourceType,
-            deliveryType: file.deliveryType,
+                originalName: file.originalName,
 
-            size: file.size,
-            mimeType: file.mimeType,
-            format: file.format,
+                fileUrl: file.fileUrl,
+                cloudinaryId: file.cloudinaryId,
 
-            uploadedBy: userId,
-            isCurrent: false
+                resourceType: file.resourceType,
+                deliveryType: file.deliveryType,
+
+                size: file.size,
+                mimeType: file.mimeType,
+                format: file.format,
+
+                uploadedBy: userId,
+                isCurrent: false
+            });
+
+            await currentVersionHistory.save({ session });
+
+            // Restore selected version details
+            file.originalName = oldVersion.originalName;
+
+            file.fileUrl = oldVersion.fileUrl;
+            file.cloudinaryId = oldVersion.cloudinaryId;
+
+            file.resourceType = oldVersion.resourceType;
+            file.deliveryType = oldVersion.deliveryType;
+
+            file.size = oldVersion.size;
+            file.mimeType = oldVersion.mimeType;
+            file.format = oldVersion.format;
+
+            // Restoration creates a new version number
+            file.currentVersion += 1;
+
+            await file.save({ session });
         });
-
-        await currentVersionHistory.save();
-
-        // Restore selected version's details
-        file.originalName = oldVersion.originalName;
-
-        file.fileUrl = oldVersion.fileUrl;
-        file.cloudinaryId = oldVersion.cloudinaryId;
-
-        file.resourceType = oldVersion.resourceType;
-        file.deliveryType = oldVersion.deliveryType;
-
-        file.size = oldVersion.size;
-        file.mimeType = oldVersion.mimeType;
-        file.format = oldVersion.format;
-
-        // Restoration creates a new version number
-        file.currentVersion += 1;
-
-        await file.save();
-
-        // IMPORTANT:
-        // Do not delete oldVersion.
-        // It must remain in history.
 
         return res.status(200).json({
             success: true,
@@ -339,7 +470,13 @@ export const restoreVersion = async (req, res) => {
         console.error("Restore version error:", error);
 
         return res.status(500).json({
+            success: false,
             message: "Failed to restore file version."
         });
+
+    } finally {
+        if (session) {
+            await session.endSession();
+        }
     }
 };

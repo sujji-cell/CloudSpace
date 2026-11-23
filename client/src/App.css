@@ -2931,3 +2931,71 @@ html[data-theme="dark"] .notification-footer {
     }
 
 }
+
+/* =========================================
+   CLOUDSPACE BRAND LOGO
+========================================= */
+
+.brand {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Full wordmark */
+
+.brand-wordmark {
+    display: block;
+    width: 165px;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Compact icon - hidden by default */
+
+.brand-symbol {
+    display: none;
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+}
+
+/* =========================================
+   COLLAPSED SIDEBAR LOGO
+========================================= */
+
+html[data-sidebar="collapsed"] .brand {
+    justify-content: center;
+}
+
+html[data-sidebar="collapsed"] .brand-wordmark {
+    display: none;
+}
+
+html[data-sidebar="collapsed"] .brand-symbol {
+    display: block;
+}
+
+/* =========================================
+   MOBILE SIDEBAR LOGO
+   Always show full wordmark
+========================================= */
+
+@media (max-width: 768px) {
+
+    html[data-sidebar="collapsed"] .brand {
+        justify-content: flex-start;
+    }
+
+    html[data-sidebar="collapsed"] .brand-wordmark {
+        display: block;
+    }
+
+    html[data-sidebar="collapsed"] .brand-symbol {
+        display: none;
+    }
+
+}

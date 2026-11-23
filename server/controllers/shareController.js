@@ -1,3 +1,4 @@
+
 import mongoose from "mongoose";
 
 import Share from "../models/Share.js";
@@ -6,100 +7,185 @@ import User from "../models/User.js";
 import Notification from "../models/Notification.js";
 
 
-// 1. Share a file with another user
+// ============================================
+// 1. SHARE A FILE WITH ANOTHER USER
+// ============================================
+
 export const shareFile = async (req, res) => {
+
     try {
-        const { fileId, email } = req.body;
+
+        const { fileId, email, permission = "viewer" } = req.body;
+
         const ownerId = req.userId;
 
-        if (!fileId || !email) {
+        // ============================================
+        // VALIDATE INPUT
+        // ============================================
+
+        if (
+            typeof fileId !== "string" ||
+            typeof email !== "string" ||
+            !fileId.trim() ||
+            !email.trim()
+        ) {
+
             return res.status(400).json({
+                success: false,
                 message: "File ID and recipient email are required."
             });
+
         }
 
-        if (!mongoose.Types.ObjectId.isValid(fileId)) {
+        const normalizedFileId = fileId.trim();
+
+        const normalizedEmail = email.trim().toLowerCase();
+
+        // Validate file ID
+        if (!mongoose.Types.ObjectId.isValid(normalizedFileId)) {
+
             return res.status(400).json({
+                success: false,
                 message: "Invalid file ID."
             });
+
         }
 
-        // Find file belonging to the logged-in user
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(normalizedEmail)) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Please enter a valid email address."
+            });
+
+        }
+
+        // Validate permission
+        if (!["viewer", "editor"].includes(permission)) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Permission must be either viewer or editor."
+            });
+
+        }
+
+
+        // ============================================
+        // FIND FILE
+        // ============================================
+
         const file = await File.findOne({
-            _id: fileId,
-            owner: ownerId
+            _id: normalizedFileId,
+            owner: ownerId,
+            isDeleted: false
         });
 
         if (!file) {
+
             return res.status(404).json({
+                success: false,
                 message: "File not found or you do not own this file."
             });
+
         }
 
-        // Find recipient
+
+        // ============================================
+        // FIND RECIPIENT
+        // ============================================
+
         const recipient = await User.findOne({
-            email: email.trim().toLowerCase()
+            email: normalizedEmail
         });
 
         if (!recipient) {
+
             return res.status(404).json({
+                success: false,
                 message: "No CloudSpace account found with this email."
             });
+
         }
 
+        // Require verified email
         if (!recipient.isVerified) {
+
             return res.status(403).json({
+                success: false,
                 message: "Recipient must verify their email first."
             });
+
         }
 
+        // Prevent sharing with yourself
         if (recipient._id.toString() === ownerId.toString()) {
+
             return res.status(400).json({
+                success: false,
                 message: "You cannot share a file with yourself."
             });
+
         }
 
-        // Check existing sharing record
+
+        // ============================================
+        // CREATE OR REACTIVATE SHARE
+        // ============================================
+
         const existingShare = await Share.findOne({
-            file: fileId,
+            file: normalizedFileId,
             recipient: recipient._id
         });
 
-        // Prevent duplicate active sharing
-        if (existingShare?.isActive) {
-            return res.status(409).json({
-                message: "This file is already shared with this user."
-            });
-        }
-
-        // Restore access if previously revoked
         if (existingShare) {
 
+            // Prevent duplicate active sharing
+            if (existingShare.isActive) {
+
+                return res.status(409).json({
+                    success: false,
+                    message: "This file is already shared with this user."
+                });
+
+            }
+
+            // Reactivate previously revoked sharing
             existingShare.owner = ownerId;
+            existingShare.permission = permission;
             existingShare.isActive = true;
 
             await existingShare.save();
 
         } else {
 
-            // Create a new sharing record
+            // Create new sharing record
             await Share.create({
-                file: fileId,
+                file: normalizedFileId,
                 owner: ownerId,
-                recipient: recipient._id
+                recipient: recipient._id,
+                permission
             });
+
         }
 
 
-        // Create ONE in-app notification for the recipient
+        // ============================================
+        // CREATE IN-APP NOTIFICATION
+        // ============================================
+
         try {
 
             const notificationsEnabled =
-                recipient.notificationPreferences?.inApp?.sharedFileUpdates !== false;
+                recipient.notificationPreferences
+                    ?.inApp
+                    ?.sharedFileUpdates !== false;
 
             if (notificationsEnabled) {
 
-                // Get file owner's name
                 const owner = await User.findById(ownerId)
                     .select("firstName middleName lastName email");
 
@@ -113,60 +199,131 @@ export const shareFile = async (req, res) => {
                         .join(" ") || owner.email
                     : "Someone";
 
-                // Create notification
                 await Notification.create({
+
                     recipient: recipient._id,
+
                     sender: ownerId,
+
                     type: "file_shared",
+
                     title: "New File Shared",
+
                     message: `${ownerName} shared "${file.originalName}" with you.`,
+
                     relatedFile: file._id,
+
                     link: "/shared"
+
                 });
+
             }
 
         } catch (notificationError) {
 
-            // Notification failure should not affect file sharing
+            // Notification failure must not affect file sharing
             console.error(
                 "Notification creation failed:",
-                notificationError.message
+                notificationError
             );
+
         }
 
 
+        // ============================================
+        // SUCCESS RESPONSE
+        // ============================================
+
         return res.status(200).json({
+
+            success: true,
+
             message: `File shared successfully with ${recipient.email}.`
+
         });
 
     } catch (error) {
 
         console.error("Share File Error:", error);
 
+        // Handle duplicate-key errors
+        if (error.code === 11000) {
+
+            return res.status(409).json({
+                success: false,
+                message: "This file is already shared with this user."
+            });
+
+        }
+
         return res.status(500).json({
+            success: false,
             message: "Unable to share file."
         });
+
     }
+
 };
 
 
-// 2. Get files shared WITH the logged-in user
+// ============================================
+// SAFE FILE FIELDS FOR SHARED FILE LISTS
+// ============================================
+
+const safeFileFields = [
+    "originalName",
+    "resourceType",
+    "size",
+    "mimeType",
+    "format",
+    "currentVersion",
+    "createdAt",
+    "updatedAt"
+].join(" ");
+
+
+// ============================================
+// 2. GET FILES SHARED WITH THE LOGGED-IN USER
+// ============================================
+
 export const getSharedWithMe = async (req, res) => {
+
     try {
 
         const shares = await Share.find({
             recipient: req.userId,
             isActive: true
         })
-            .populate("file")
+
+            .populate({
+                path: "file",
+                select: safeFileFields,
+                match: {
+                    isDeleted: false
+                }
+            })
+
             .populate(
                 "owner",
                 "firstName middleName lastName email"
             )
-            .sort({ createdAt: -1 });
+
+            .sort({
+                createdAt: -1,
+                _id: -1
+            });
+
+        // Remove shares whose files are deleted or unavailable
+        const activeShares = shares.filter(
+            share => share.file !== null
+        );
 
         return res.status(200).json({
-            shares
+
+            success: true,
+
+            shares: activeShares
+
         });
 
     } catch (error) {
@@ -174,29 +331,57 @@ export const getSharedWithMe = async (req, res) => {
         console.error("Get Shared Files Error:", error);
 
         return res.status(500).json({
+            success: false,
             message: "Unable to fetch shared files."
         });
+
     }
+
 };
 
 
-// 3. Get files shared BY the logged-in user
+// ============================================
+// 3. GET FILES SHARED BY THE LOGGED-IN USER
+// ============================================
+
 export const getSharedByMe = async (req, res) => {
+
     try {
 
         const shares = await Share.find({
             owner: req.userId,
             isActive: true
         })
-            .populate("file")
+
+            .populate({
+                path: "file",
+                select: safeFileFields,
+                match: {
+                    isDeleted: false
+                }
+            })
+
             .populate(
                 "recipient",
                 "firstName middleName lastName email"
             )
-            .sort({ createdAt: -1 });
+
+            .sort({
+                createdAt: -1,
+                _id: -1
+            });
+
+        // Remove shares whose files are deleted or unavailable
+        const activeShares = shares.filter(
+            share => share.file !== null
+        );
 
         return res.status(200).json({
-            shares
+
+            success: true,
+
+            shares: activeShares
+
         });
 
     } catch (error) {
@@ -204,42 +389,67 @@ export const getSharedByMe = async (req, res) => {
         console.error("Get Shared By Me Error:", error);
 
         return res.status(500).json({
+            success: false,
             message: "Unable to fetch shared files."
         });
+
     }
+
 };
 
 
-// 4. Revoke access to a shared file
+// ============================================
+// 4. REVOKE ACCESS TO A SHARED FILE
+// ============================================
+
 export const revokeShare = async (req, res) => {
+
     try {
 
         const { shareId } = req.params;
 
+        // Validate share ID
         if (!mongoose.Types.ObjectId.isValid(shareId)) {
+
             return res.status(400).json({
+                success: false,
                 message: "Invalid share ID."
             });
+
         }
 
-        const share = await Share.findOne({
-            _id: shareId,
-            owner: req.userId,
-            isActive: true
-        });
+        // Find active share belonging to owner
+        const share = await Share.findOneAndUpdate(
+            {
+                _id: shareId,
+                owner: req.userId,
+                isActive: true
+            },
+            {
+                $set: {
+                    isActive: false
+                }
+            },
+            {
+                new: true
+            }
+        );
 
         if (!share) {
+
             return res.status(404).json({
+                success: false,
                 message: "Active share not found."
             });
+
         }
 
-        share.isActive = false;
-
-        await share.save();
-
         return res.status(200).json({
+
+            success: true,
+
             message: "File access revoked successfully."
+
         });
 
     } catch (error) {
@@ -247,43 +457,67 @@ export const revokeShare = async (req, res) => {
         console.error("Revoke Share Error:", error);
 
         return res.status(500).json({
+            success: false,
             message: "Unable to revoke file access."
         });
+
     }
+
 };
 
-// 5. Remove a file shared WITH the logged-in user
+
+// ============================================
+// 5. REMOVE A FILE SHARED WITH THE LOGGED-IN USER
+// ============================================
+
 export const removeSharedFile = async (req, res) => {
+
     try {
 
         const { shareId } = req.params;
 
+        // Validate share ID
         if (!mongoose.Types.ObjectId.isValid(shareId)) {
+
             return res.status(400).json({
+                success: false,
                 message: "Invalid share ID."
             });
+
         }
 
-        // Find a share belonging to the logged-in recipient
-        const share = await Share.findOne({
-            _id: shareId,
-            recipient: req.userId,
-            isActive: true
-        });
+        // Find and deactivate share belonging to recipient
+        const share = await Share.findOneAndUpdate(
+            {
+                _id: shareId,
+                recipient: req.userId,
+                isActive: true
+            },
+            {
+                $set: {
+                    isActive: false
+                }
+            },
+            {
+                new: true
+            }
+        );
 
         if (!share) {
+
             return res.status(404).json({
+                success: false,
                 message: "Shared file not found."
             });
+
         }
 
-        // Deactivate this sharing record
-        share.isActive = false;
-
-        await share.save();
-
         return res.status(200).json({
+
+            success: true,
+
             message: "Shared file removed successfully."
+
         });
 
     } catch (error) {
@@ -291,7 +525,10 @@ export const removeSharedFile = async (req, res) => {
         console.error("Remove Shared File Error:", error);
 
         return res.status(500).json({
+            success: false,
             message: "Unable to remove shared file."
         });
+
     }
+
 };

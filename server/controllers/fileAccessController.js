@@ -48,6 +48,9 @@ export const getFileAccessUrl = async (req, res) => {
             file.owner.toString() === userId.toString();
 
         // Check sharing permission
+        // Check sharing permission
+        let permission = "owner";
+
         if (!isOwner) {
 
             const activeShare = await Share.findOne({
@@ -65,12 +68,12 @@ export const getFileAccessUrl = async (req, res) => {
 
             }
 
+            permission = activeShare.permission || "viewer";
         }
-
         // Determine resource type
         let resourceType = file.resourceType || "raw";
 
-        const resourceMatch = file.fileUrl.match(
+        const resourceMatch = (file.fileUrl || "").match(
             /\/(image|video|raw)\/(upload|authenticated)\//
         );
 
@@ -104,8 +107,10 @@ export const getFileAccessUrl = async (req, res) => {
 
         } else {
 
-            // Existing public files
-            accessUrl = file.fileUrl;
+            return res.status(403).json({
+                success: false,
+                message: "This file does not have secure authenticated delivery configured."
+            });
 
         }
 
@@ -115,15 +120,11 @@ export const getFileAccessUrl = async (req, res) => {
         await file.save();
 
         return res.status(200).json({
-
             success: true,
-
             message: "File access granted.",
-
             accessUrl,
-
+            permission,
             lastAccessedAt: file.lastAccessedAt
-
         });
 
     } catch (error) {

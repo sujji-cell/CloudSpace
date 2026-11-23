@@ -94,7 +94,11 @@ function Account() {
     const storagePercentage = storageLimit > 0
         ? Math.min((storageUsed / storageLimit) * 100, 100)
         : 0;
-
+  
+        const formattedStoragePercentage =
+    storagePercentage > 0 && storagePercentage < 0.01
+        ? "<0.01%"
+        : `${storagePercentage.toFixed(2)}%`;
 
     // --------------------------------
     // LOGOUT
@@ -202,9 +206,9 @@ function Account() {
                         </div>
 
                         <button
-                            className="edit-profile-btn"
-                            onClick={() => alert("Edit Profile functionality coming soon!")}
-                        >
+    className="edit-profile-btn"
+    onClick={() => navigate("/settings#profile-settings")}
+>
 
                             <Edit size={16} />
 
@@ -381,8 +385,8 @@ function Account() {
                             <div className="storage-card-footer">
 
                                 <span>
-                                    {storagePercentage.toFixed(1)}% used
-                                </span>
+    {formattedStoragePercentage} used
+</span>
 
                                 <span>
                                     {formatSize(
@@ -435,8 +439,8 @@ function Account() {
                                 </div>
 
                                 <button
-                                    onClick={() => alert("Change Password functionality coming soon!")}
-                                >
+    onClick={() => navigate("/settings#security-settings")}
+>
                                     Manage
                                 </button>
 

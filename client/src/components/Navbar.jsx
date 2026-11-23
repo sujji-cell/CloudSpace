@@ -1,8 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
+
+import React, {
+    useEffect,
+    useRef,
+    useState,
+    useCallback
+} from "react";
+
 import { useNavigate } from "react-router-dom";
 
 import {
-    Search,
     Bell,
     Menu,
     ChevronDown,
@@ -28,14 +34,16 @@ function Navbar({ activeItem, onMenuClick }) {
 
     const notificationRef = useRef(null);
 
-    // Get user's full name
+    // ============================================
+    // USER PROFILE
+    // ============================================
+
     const fullName = [
         user?.firstName,
         user?.middleName,
         user?.lastName
     ].filter(Boolean).join(" ") || user?.name || "User";
 
-    // Generate profile initials
     const initials = fullName
         .split(/\s+/)
         .filter(Boolean)
@@ -49,8 +57,11 @@ function Navbar({ activeItem, onMenuClick }) {
     };
 
 
-    // Fetch notifications
-    const fetchNotifications = async () => {
+    // ============================================
+    // FETCH NOTIFICATIONS
+    // ============================================
+
+    const fetchNotifications = useCallback(async () => {
 
         try {
 
@@ -58,8 +69,13 @@ function Navbar({ activeItem, onMenuClick }) {
 
             const response = await api.get("/notifications");
 
-            setNotifications(response.data.notifications || []);
-            setUnreadCount(response.data.unreadCount || 0);
+            setNotifications(
+                response.data.notifications || []
+            );
+
+            setUnreadCount(
+                response.data.unreadCount || 0
+            );
 
         } catch (error) {
 
@@ -74,24 +90,39 @@ function Navbar({ activeItem, onMenuClick }) {
 
         }
 
-    };
+    }, []);
 
 
-    // Fetch notifications when Navbar loads
+    // Fetch notifications when authenticated user changes
     useEffect(() => {
+
+        if (!user?._id) {
+
+            setNotifications([]);
+            setUnreadCount(0);
+            setShowNotifications(false);
+
+            return;
+
+        }
 
         fetchNotifications();
 
         const interval = setInterval(() => {
+
             fetchNotifications();
+
         }, 30000);
 
         return () => clearInterval(interval);
 
-    }, []);
+    }, [fetchNotifications, user?._id]);
 
 
-    // Close dropdown when clicking outside
+    // ============================================
+    // CLOSE DROPDOWN WHEN CLICKING OUTSIDE
+    // ============================================
+
     useEffect(() => {
 
         const handleClickOutside = (event) => {
@@ -100,7 +131,9 @@ function Navbar({ activeItem, onMenuClick }) {
                 notificationRef.current &&
                 !notificationRef.current.contains(event.target)
             ) {
+
                 setShowNotifications(false);
+
             }
 
         };
@@ -111,16 +144,21 @@ function Navbar({ activeItem, onMenuClick }) {
         );
 
         return () => {
+
             document.removeEventListener(
                 "mousedown",
                 handleClickOutside
             );
+
         };
 
     }, []);
 
 
-    // Toggle notification dropdown
+    // ============================================
+    // TOGGLE NOTIFICATION DROPDOWN
+    // ============================================
+
     const handleNotificationClick = () => {
 
         const newState = !showNotifications;
@@ -128,13 +166,18 @@ function Navbar({ activeItem, onMenuClick }) {
         setShowNotifications(newState);
 
         if (newState) {
+
             fetchNotifications();
+
         }
 
     };
 
 
-    // Mark one notification as read
+    // ============================================
+    // MARK ONE NOTIFICATION AS READ
+    // ============================================
+
     const handleMarkAsRead = async (notificationId) => {
 
         try {
@@ -144,14 +187,20 @@ function Navbar({ activeItem, onMenuClick }) {
             );
 
             setNotifications((previous) =>
+
                 previous.map((notification) =>
+
                     notification._id === notificationId
+
                         ? {
                             ...notification,
                             isRead: true
                         }
+
                         : notification
+
                 )
+
             );
 
             setUnreadCount((previous) =>
@@ -170,7 +219,10 @@ function Navbar({ activeItem, onMenuClick }) {
     };
 
 
-    // Mark all notifications as read
+    // ============================================
+    // MARK ALL NOTIFICATIONS AS READ
+    // ============================================
+
     const handleMarkAllAsRead = async () => {
 
         try {
@@ -178,10 +230,14 @@ function Navbar({ activeItem, onMenuClick }) {
             await api.put("/notifications/read-all");
 
             setNotifications((previous) =>
+
                 previous.map((notification) => ({
+
                     ...notification,
                     isRead: true
+
                 }))
+
             );
 
             setUnreadCount(0);
@@ -198,7 +254,10 @@ function Navbar({ activeItem, onMenuClick }) {
     };
 
 
-    // Delete notification
+    // ============================================
+    // DELETE NOTIFICATION
+    // ============================================
+
     const handleDeleteNotification = async (
         notificationId,
         isRead
@@ -211,16 +270,20 @@ function Navbar({ activeItem, onMenuClick }) {
             );
 
             setNotifications((previous) =>
+
                 previous.filter(
                     (notification) =>
                         notification._id !== notificationId
                 )
+
             );
 
             if (!isRead) {
+
                 setUnreadCount((previous) =>
                     Math.max(0, previous - 1)
                 );
+
             }
 
         } catch (error) {
@@ -235,36 +298,52 @@ function Navbar({ activeItem, onMenuClick }) {
     };
 
 
-    // Open notification
-    // Open notification and navigate to the related file
-const handleOpenNotification = async (notification) => {
+    // ============================================
+    // OPEN NOTIFICATION
+    // ============================================
 
-    // Mark notification as read
-    if (!notification.isRead) {
-        await handleMarkAsRead(notification._id);
-    }
+    const handleOpenNotification = async (notification) => {
 
-    // Close notification dropdown
-    setShowNotifications(false);
+        if (!notification.isRead) {
 
-    // Navigate to the actual shared file
-    if (notification.relatedFile?._id) {
+            await handleMarkAsRead(notification._id);
 
-        navigate(`/shared-file/${notification.relatedFile._id}`);
+        }
 
-    } else if (notification.link) {
+        setShowNotifications(false);
 
-        navigate(notification.link);
+        // Prefer the explicitly configured navigation link
+        if (notification.link) {
 
-    }
+            navigate(notification.link);
+            return;
 
-};
+        }
+
+        // Fallback to related file
+        if (notification.relatedFile?._id) {
+
+            navigate(
+                `/shared-file/${notification.relatedFile._id}`
+            );
+
+        }
+
+    };
 
 
-    // Format notification date
+    // ============================================
+    // FORMAT NOTIFICATION DATE
+    // ============================================
+
     const formatNotificationDate = (date) => {
 
         const notificationDate = new Date(date);
+
+        if (Number.isNaN(notificationDate.getTime())) {
+            return "";
+        }
+
         const now = new Date();
 
         const difference = Math.floor(
@@ -292,6 +371,10 @@ const handleOpenNotification = async (notification) => {
     };
 
 
+    // ============================================
+    // RENDER
+    // ============================================
+
     return (
 
         <header className="navbar">
@@ -307,8 +390,13 @@ const handleOpenNotification = async (notification) => {
                 </button>
 
                 <div className="page-heading">
+
                     <h2>{activeItem}</h2>
-                    <p>Manage your files and documents</p>
+
+                    <p>
+                        Manage your files and documents
+                    </p>
+
                 </div>
 
             </div>
@@ -316,24 +404,10 @@ const handleOpenNotification = async (notification) => {
 
             <div className="navbar-right">
 
-                <div className="search-box">
 
-                    <Search size={18} />
-
-                    <input
-                        type="text"
-                        placeholder="Search your files..."
-                        aria-label="Search files"
-                    />
-
-                    <span className="search-shortcut">
-                        ⌘ K
-                    </span>
-
-                </div>
-
-
+                {/* ================================= */}
                 {/* NOTIFICATION BUTTON */}
+                {/* ================================= */}
 
                 <div
                     className="notification-container"
@@ -345,6 +419,7 @@ const handleOpenNotification = async (notification) => {
                         onClick={handleNotificationClick}
                         aria-label="Notifications"
                         aria-expanded={showNotifications}
+                        aria-haspopup="true"
                     >
 
                         <Bell size={20} />
@@ -352,7 +427,11 @@ const handleOpenNotification = async (notification) => {
                         {unreadCount > 0 && (
 
                             <span className="notification-count">
-                                {unreadCount > 99 ? "99+" : unreadCount}
+
+                                {unreadCount > 99
+                                    ? "99+"
+                                    : unreadCount}
+
                             </span>
 
                         )}
@@ -360,7 +439,9 @@ const handleOpenNotification = async (notification) => {
                     </button>
 
 
+                    {/* ================================= */}
                     {/* NOTIFICATION DROPDOWN */}
+                    {/* ================================= */}
 
                     {showNotifications && (
 
@@ -369,25 +450,39 @@ const handleOpenNotification = async (notification) => {
                             <div className="notification-header">
 
                                 <div>
+
                                     <h3>Notifications</h3>
 
                                     <p>
+
                                         {unreadCount > 0
+
                                             ? `${unreadCount} unread notifications`
-                                            : "You're all caught up"}
+
+                                            : "You're all caught up"
+
+                                        }
+
                                     </p>
+
                                 </div>
 
                                 <button
                                     className="notification-close"
-                                    onClick={() => setShowNotifications(false)}
+                                    onClick={() =>
+                                        setShowNotifications(false)
+                                    }
                                     aria-label="Close notifications"
                                 >
+
                                     <X size={18} />
+
                                 </button>
 
                             </div>
 
+
+                            {/* MARK ALL AS READ */}
 
                             {unreadCount > 0 && (
 
@@ -395,99 +490,119 @@ const handleOpenNotification = async (notification) => {
                                     className="mark-all-btn"
                                     onClick={handleMarkAllAsRead}
                                 >
+
                                     <CheckCheck size={15} />
+
                                     Mark all as read
+
                                 </button>
 
                             )}
 
 
+                            {/* NOTIFICATION LIST */}
+
                             <div className="notification-list">
 
-                                {loadingNotifications && notifications.length === 0 ? (
+                                {loadingNotifications && (
 
                                     <div className="notification-empty">
                                         Loading notifications...
                                     </div>
 
-                                ) : notifications.length === 0 ? (
-
-                                    <div className="notification-empty">
-
-                                        <BellRing size={30} />
-
-                                        <h4>No notifications yet</h4>
-
-                                        <p>
-                                            Notifications will appear here.
-                                        </p>
-
-                                    </div>
-
-                                ) : (
-
-                                    notifications.map((notification) => (
-
-                                        <div
-                                            key={notification._id}
-                                            className={`notification-item ${
-                                                !notification.isRead ? "unread" : ""
-                                            }`}
-                                        >
-
-                                            <button
-                                                className="notification-item-content"
-                                                onClick={() =>
-                                                    handleOpenNotification(notification)
-                                                }
-                                            >
-
-                                                <div className="notification-icon">
-                                                    <Bell size={17} />
-                                                </div>
-
-                                                <div className="notification-details">
-
-                                                    <h4>
-                                                        {notification.title}
-                                                    </h4>
-
-                                                    <p>
-                                                        {notification.message}
-                                                    </p>
-
-                                                    <span>
-                                                        {formatNotificationDate(
-                                                            notification.createdAt
-                                                        )}
-                                                    </span>
-
-                                                </div>
-
-                                            </button>
+                                )}
 
 
-                                            <button
-                                                className="notification-delete"
-                                                onClick={() =>
-                                                    handleDeleteNotification(
-                                                        notification._id,
-                                                        notification.isRead
-                                                    )
-                                                }
-                                                aria-label="Delete notification"
-                                            >
-                                                <Trash2 size={15} />
-                                            </button>
+                                {!loadingNotifications &&
+                                    notifications.length === 0 && (
+
+                                        <div className="notification-empty">
+
+                                            <BellRing size={30} />
+
+                                            <h4>No notifications yet</h4>
+
+                                            <p>
+                                                Notifications will appear here.
+                                            </p>
 
                                         </div>
 
-                                    ))
+                                    )}
 
-                                )}
+
+                                {notifications.map((notification) => (
+
+                                    <div
+                                        key={notification._id}
+                                        className={`notification-item ${
+                                            !notification.isRead
+                                                ? "unread"
+                                                : ""
+                                        }`}
+                                    >
+
+                                        <button
+                                            className="notification-item-content"
+                                            onClick={() =>
+                                                handleOpenNotification(notification)
+                                            }
+                                        >
+
+                                            <div className="notification-icon">
+
+                                                <Bell size={17} />
+
+                                            </div>
+
+                                            <div className="notification-details">
+
+                                                <h4>
+                                                    {notification.title}
+                                                </h4>
+
+                                                <p>
+                                                    {notification.message}
+                                                </p>
+
+                                                <span>
+
+                                                    {formatNotificationDate(
+                                                        notification.createdAt
+                                                    )}
+
+                                                </span>
+
+                                            </div>
+
+                                        </button>
+
+
+                                        {/* DELETE BUTTON */}
+
+                                        <button
+                                            className="notification-delete"
+                                            onClick={() =>
+                                                handleDeleteNotification(
+                                                    notification._id,
+                                                    notification.isRead
+                                                )
+                                            }
+                                            aria-label="Delete notification"
+                                        >
+
+                                            <Trash2 size={15} />
+
+                                        </button>
+
+                                    </div>
+
+                                ))}
 
                             </div>
 
+
+                            {/* FOOTER */}
 
                             <div className="notification-footer">
 
@@ -504,7 +619,9 @@ const handleOpenNotification = async (notification) => {
                 </div>
 
 
+                {/* ================================= */}
                 {/* USER PROFILE */}
+                {/* ================================= */}
 
                 <div
                     className="navbar-profile"
@@ -519,6 +636,7 @@ const handleOpenNotification = async (notification) => {
                         ) {
 
                             event.preventDefault();
+
                             handleProfileClick();
 
                         }
@@ -528,7 +646,9 @@ const handleOpenNotification = async (notification) => {
                 >
 
                     <div className="profile-avatar">
+
                         {initials || "U"}
+
                     </div>
 
                     <div className="profile-details">

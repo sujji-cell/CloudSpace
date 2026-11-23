@@ -334,16 +334,23 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
             >
 
                 {/* SIDEBAR HEADER */}
-
                 <div className="sidebar-header">
 
                     <div className="brand">
 
-                        <div className="brand-icon">
-                            <Cloud size={23} />
-                        </div>
+                        {/* Full logo */}
+                        <img
+                            src="/cloudspace-wordmark-dark.png"
+                            alt="CloudSpace"
+                            className="brand-wordmark"
+                        />
 
-                        <span>CloudSpace</span>
+                        {/* Compact icon */}
+                        <img
+                            src="/cloudspace-icon.png"
+                            alt="CloudSpace"
+                            className="brand-symbol"
+                        />
 
                     </div>
 
@@ -379,11 +386,10 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
                                 <button
                                     key={item.title}
-                                    className={`sidebar-link ${
-                                        currentActiveItem === item.title
-                                            ? "active"
-                                            : ""
-                                    }`}
+                                    className={`sidebar-link ${currentActiveItem === item.title
+                                        ? "active"
+                                        : ""
+                                        }`}
                                     onClick={() => handleNavigation(item)}
                                     title={
                                         sidebar === "collapsed"
@@ -476,11 +482,10 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
 
 
                             <button
-                                className={`upgrade-btn ${
-                                    location.pathname === "/manage-storage"
-                                        ? "active"
-                                        : ""
-                                }`}
+                                className={`upgrade-btn ${location.pathname === "/manage-storage"
+                                    ? "active"
+                                    : ""
+                                    }`}
                                 onClick={handleManageStorage}
                             >
 
@@ -494,11 +499,10 @@ function Sidebar({ activeItem, setActiveItem, isOpen, onClose }) {
                         {/* SETTINGS */}
 
                         <button
-                            className={`sidebar-link settings-link ${
-                                currentActiveItem === "Settings"
-                                    ? "active"
-                                    : ""
-                            }`}
+                            className={`sidebar-link settings-link ${currentActiveItem === "Settings"
+                                ? "active"
+                                : ""
+                                }`}
                             onClick={() => {
                                 setActiveItem?.("Settings");
                                 navigate("/settings");

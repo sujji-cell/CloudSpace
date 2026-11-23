@@ -4,7 +4,7 @@ import Session from "../models/Session.js";
 const authMiddleware = async (req, res, next) => {
     try {
         // 1. Get token from cookies
-        const token = req.cookies.token;
+        const token = req.cookies?.token;
 
         if (!token) {
             return res.status(401).json({
@@ -13,20 +13,36 @@ const authMiddleware = async (req, res, next) => {
             });
         }
 
-        // 2. Verify JWT
-        const decoded = jwt.verify(
-            token,
-            process.env.JWT_SECRET
-        );
+        // 2. Check JWT configuration
+        if (!process.env.JWT_SECRET) {
+            return next(new Error("JWT_SECRET is not configured."));
+        }
 
-        if (!decoded.sessionId) {
+        // 3. Verify JWT
+        let decoded;
+
+        try {
+            decoded = jwt.verify(
+                token,
+                process.env.JWT_SECRET
+            );
+        } catch (error) {
+            return res.status(401).json({
+                success: false,
+                message: error.name === "TokenExpiredError"
+                    ? "Token expired. Please login again."
+                    : "Invalid token. Please login again."
+            });
+        }
+
+        if (!decoded.userId || !decoded.sessionId) {
             return res.status(401).json({
                 success: false,
                 message: "Invalid session. Please login again."
             });
         }
 
-        // 3. Atomically validate session and update activity
+        // 4. Atomically validate session and update activity
         const session = await Session.findOneAndUpdate(
             {
                 userId: decoded.userId,
@@ -40,11 +56,11 @@ const authMiddleware = async (req, res, next) => {
                 }
             },
             {
-                new: true
+                returnDocument: "after"
             }
         );
 
-        // 4. Reject expired or revoked sessions
+        // 5. Reject expired or revoked sessions
         if (!session) {
             return res.status(401).json({
                 success: false,
@@ -52,17 +68,15 @@ const authMiddleware = async (req, res, next) => {
             });
         }
 
-        // 5. Attach authenticated user and session
+        // 6. Attach authenticated user and session
         req.userId = decoded.userId;
         req.sessionId = decoded.sessionId;
 
         next();
 
     } catch (error) {
-        return res.status(401).json({
-            success: false,
-            message: "Invalid or expired token. Please login again."
-        });
+        // Pass unexpected errors to global error middleware
+        next(error);
     }
 };
 

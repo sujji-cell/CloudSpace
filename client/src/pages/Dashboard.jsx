@@ -12,8 +12,8 @@ import {
     FileArchive,
     MoreHorizontal,
     ArrowUpRight,
-    Plus,
-    FolderPlus
+    Plus
+   
 } from "lucide-react";
 
 
@@ -441,13 +441,7 @@ function Dashboard() {
 
                         <div className="welcome-actions">
 
-                            <button className="secondary-btn">
-
-                                <FolderPlus size={17} />
-
-                                New Folder
-
-                            </button>
+                        
 
 
                             <button
